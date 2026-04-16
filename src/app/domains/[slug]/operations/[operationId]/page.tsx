@@ -70,6 +70,59 @@ export default function OperationDetailPage({ params }: OperationDetailPageProps
     }
   }
 
+  // Activate a phase — only the NEXT sequential phase can be activated.
+  // Phases are ordered by sort_order: you must complete Phase 1 before
+  // Phase 2 can become active. Clicking any other phase just expands
+  // its detail panel for viewing.
+  async function activatePhase(phaseId: string) {
+    const phase = sortedPhases.find((p: any) => p.id === phaseId);
+    if (!phase) return;
+
+    // Completed phases and already-active phases just expand the detail
+    if (phase.status === "completed" || phase.status === "active") {
+      setExpandedPhase(phaseId);
+      return;
+    }
+
+    // Find the next activatable phase: the first pending phase where
+    // all phases before it (lower sort_order) are completed.
+    const nextActivatable = sortedPhases.find((p: any) => {
+      if (p.status !== "pending") return false;
+      // Check all phases with lower sort_order are completed
+      const priorPhases = sortedPhases.filter(
+        (prior: any) => prior.sort_order < p.sort_order
+      );
+      return priorPhases.every((prior: any) => prior.status === "completed");
+    });
+
+    // Only allow activation if this IS the next sequential phase
+    if (!nextActivatable || nextActivatable.id !== phaseId) {
+      // Not the next in sequence — just expand to view, don't activate
+      setExpandedPhase(phaseId);
+      return;
+    }
+
+    // Deactivate any currently active phase first
+    const currentlyActive = sortedPhases.find((p: any) => p.status === "active");
+    if (currentlyActive) {
+      await fetch(`/api/phases/${currentlyActive.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "pending" }),
+      });
+    }
+
+    // Activate the next sequential phase
+    await fetch(`/api/phases/${phaseId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "active" }),
+    });
+
+    setExpandedPhase(phaseId);
+    fetchOperation();
+  }
+
   if (loading) {
     return <div className="py-20 text-center text-zinc-500">Loading...</div>;
   }
@@ -185,7 +238,7 @@ export default function OperationDetailPage({ params }: OperationDetailPageProps
               <StepperTimeline
                 steps={timelineSteps}
                 color={color}
-                onStepClick={(id) => setExpandedPhase(id)}
+                onStepClick={(id) => activatePhase(id)}
               />
             ) : (
               <p className="text-sm text-zinc-600">No phases yet.</p>

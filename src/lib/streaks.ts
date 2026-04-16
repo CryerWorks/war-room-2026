@@ -277,8 +277,64 @@ export async function runCompletionCascade(
   // If module isn't linked to a phase, no cascade to check
   if (!modulePhaseId) return events;
 
+  // Auto-activate: if this module's phase is still "pending", activate it
+  // ONLY if all prior phases (lower sort_order) are completed.
+  // This enforces sequential progression — you can't skip ahead.
+  const { data: currentPhase } = await supabase
+    .from("phases")
+    .select("status, operation_id, sort_order")
+    .eq("id", modulePhaseId)
+    .single();
+
+  if (currentPhase && currentPhase.status === "pending" && currentPhase.operation_id) {
+    // Check all prior phases are completed
+    const { data: priorPhases } = await supabase
+      .from("phases")
+      .select("status")
+      .eq("operation_id", currentPhase.operation_id)
+      .lt("sort_order", currentPhase.sort_order);
+
+    const allPriorCompleted = !priorPhases || priorPhases.length === 0 ||
+      priorPhases.every((p) => p.status === "completed");
+
+    if (allPriorCompleted) {
+      // Deactivate any currently active sibling phase
+      await supabase
+        .from("phases")
+        .update({ status: "pending", updated_at: new Date().toISOString() })
+        .eq("operation_id", currentPhase.operation_id)
+        .eq("status", "active");
+
+      // Activate this phase
+      await supabase
+        .from("phases")
+        .update({ status: "active", updated_at: new Date().toISOString() })
+        .eq("id", modulePhaseId);
+    }
+  }
+
   // Level 1: did this complete a phase?
   const phaseEvent = await checkPhaseCompletion(modulePhaseId);
+
+  // If the phase just completed, auto-activate the next sequential phase
+  if (phaseEvent && currentPhase?.operation_id) {
+    const { data: nextPhase } = await supabase
+      .from("phases")
+      .select("id")
+      .eq("operation_id", currentPhase.operation_id)
+      .eq("status", "pending")
+      .order("sort_order", { ascending: true })
+      .limit(1)
+      .single();
+
+    if (nextPhase) {
+      await supabase
+        .from("phases")
+        .update({ status: "active", updated_at: new Date().toISOString() })
+        .eq("id", nextPhase.id);
+    }
+  }
+
   if (!phaseEvent) return events;
   events.push(phaseEvent);
 

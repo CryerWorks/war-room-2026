@@ -1,34 +1,21 @@
+import { supabase } from "@/lib/supabase";
 import type { Domain } from "@/types";
 
-// Placeholder until Supabase is wired up
-const DOMAINS: Domain[] = [
-  {
-    id: "1",
-    name: "Linguistic",
-    slug: "linguistic",
-    description: "Language learning and communication goals",
-    color: "#6366f1",
-    created_at: "",
-  },
-  {
-    id: "2",
-    name: "Skill",
-    slug: "skill",
-    description: "Technical and programming skill development",
-    color: "#f59e0b",
-    created_at: "",
-  },
-  {
-    id: "3",
-    name: "Physical",
-    slug: "physical",
-    description: "Physical fitness and health goals",
-    color: "#10b981",
-    created_at: "",
-  },
-];
+export const dynamic = "force-dynamic";
 
-export default function DomainsPage() {
+async function getDomains(): Promise<Domain[]> {
+  const { data, error } = await supabase
+    .from("domains")
+    .select("*")
+    .order("name");
+
+  if (error) throw error;
+  return data;
+}
+
+export default async function DomainsPage() {
+  const domains = await getDomains();
+
   return (
     <div className="space-y-8">
       <div>
@@ -41,7 +28,7 @@ export default function DomainsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {DOMAINS.map((domain) => (
+        {domains.map((domain) => (
           <div
             key={domain.id}
             className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"

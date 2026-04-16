@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { formatDate, formatTime } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 import ModuleForm from "@/components/modules/ModuleForm";
 import ModuleNotes from "@/components/modules/ModuleNotes";
+import ModuleItem from "@/components/modules/ModuleItem";
 import CompletionOverlay from "@/components/ui/CompletionOverlay";
 import type { ModuleWithDetails, Domain, CompletionEvent } from "@/types";
 
@@ -136,108 +137,32 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
           </div>
         ) : (
           modules.map((mod) => (
-            <div key={mod.id} className="px-4 sm:px-6 py-3 sm:py-4">
-              <div className="flex items-start gap-3">
-                {/* Completion checkbox */}
-                <button
-                  onClick={() => toggleCompletion(mod.id, mod.is_completed)}
-                  className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
-                    mod.is_completed
-                      ? "bg-emerald-500 border-emerald-500 text-white scale-110"
-                      : "border-zinc-600 hover:border-emerald-400 scale-100"
-                  }`}
-                >
-                  <svg
-                    className={`w-3 h-3 transition-all duration-200 ${
-                      mod.is_completed
-                        ? "opacity-100 scale-100"
-                        : "opacity-0 scale-50"
-                    }`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={3}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                </button>
-
-                {/* Module content */}
-                <div className="flex-1 min-w-0">
-                  {/* Hierarchy breadcrumb — only shown for linked modules */}
-                  {mod.operation && (
-                    <span
-                      className="text-[10px] font-mono block mb-0.5"
-                      style={{ color: "#d6d5cc" }}
-                    >
-                      {mod.operation.goal?.icon && `${mod.operation.goal.icon} `}
-                      {mod.operation.goal?.title && `${mod.operation.goal.title} → `}
-                      {mod.operation.title}
-                      {mod.phase && ` → ${mod.phase.title}`}
-                    </span>
-                  )}
-                  <div className="flex items-center gap-2 mb-1">
-                    <div
-                      className="w-2 h-2 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: mod.domain?.color || "#63c4f1" }}
-                    />
-                    <span
-                      className={`font-medium transition-all duration-200 ${
-                        mod.is_completed
-                          ? "line-through text-zinc-400 text-zinc-500"
-                          : "text-zinc-100"
-                      }`}
-                    >
-                      {mod.title}
-                    </span>
-                  </div>
-
-                  {/* Time slot */}
-                  {mod.start_time && (
-                    <p className="text-xs text-zinc-500 text-zinc-400 mb-1">
-                      {formatTime(mod.start_time)}
-                      {mod.end_time && ` – ${formatTime(mod.end_time)}`}
-                    </p>
-                  )}
-
-                  {/* Description */}
-                  {mod.description && (
-                    <p className="text-sm text-zinc-500 text-zinc-400">
-                      {mod.description}
-                    </p>
-                  )}
-
-                  {/* Action buttons */}
-                  <div className="flex items-center gap-3 mt-2">
-                    <button
-                      onClick={() =>
-                        setExpandedNotes(expandedNotes === mod.id ? null : mod.id)
-                      }
-                      className="text-xs text-zinc-400 hover:text-zinc-300 transition-colors"
-                    >
-                      Notes ({mod.notes?.length || 0})
-                    </button>
-                    <button
-                      onClick={() => deleteModule(mod.id)}
-                      className="text-xs text-red-400 hover:text-red-600 transition-colors"
-                    >
-                      Delete
-                    </button>
-                  </div>
-
-                  {/* Notes panel */}
-                  {expandedNotes === mod.id && (
-                    <div className="mt-3">
-                      <ModuleNotes
-                        moduleId={mod.id}
-                        notes={mod.notes || []}
-                        onNotesChanged={fetchModules}
-                      />
-                    </div>
-                  )}
+            <ModuleItem
+              key={mod.id}
+              module={mod}
+              showHierarchy
+              onToggle={toggleCompletion}
+              onDelete={deleteModule}
+              onSaved={fetchModules}
+            >
+              <button
+                onClick={() =>
+                  setExpandedNotes(expandedNotes === mod.id ? null : mod.id)
+                }
+                className="text-xs text-zinc-400 hover:text-zinc-300 transition-colors"
+              >
+                Notes ({mod.notes?.length || 0})
+              </button>
+              {expandedNotes === mod.id && (
+                <div className="mt-3 w-full">
+                  <ModuleNotes
+                    moduleId={mod.id}
+                    notes={mod.notes || []}
+                    onNotesChanged={fetchModules}
+                  />
                 </div>
-              </div>
-            </div>
+              )}
+            </ModuleItem>
           ))
         )}
       </div>

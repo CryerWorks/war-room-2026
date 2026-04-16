@@ -176,3 +176,82 @@ body::before {
 .glow-hover:hover {
   box-shadow: 0 0 20px color-mix(in srgb, var(--glow-color, #6366f1) 15%, transparent);
 }
+
+/* ============================================================
+   Accordion — smooth expand/collapse using CSS Grid trick.
+   grid-template-rows transitions from 0fr (collapsed) to 1fr (expanded).
+   This animates height to "auto" which CSS can't do natively.
+   ============================================================ */
+
+.accordion {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s ease-out;
+}
+
+.accordion.open {
+  grid-template-rows: 1fr;
+}
+
+.accordion > * {
+  overflow: hidden;
+}
+
+/* ============================================================
+   Staggered entry — operations appear one after another.
+   Each child delays slightly longer, creating a cascade effect.
+   ============================================================ */
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stagger-in > * {
+  animation: fadeSlideIn 0.25s ease-out both;
+}
+
+.stagger-in > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-in > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-in > *:nth-child(3) { animation-delay: 120ms; }
+.stagger-in > *:nth-child(4) { animation-delay: 180ms; }
+.stagger-in > *:nth-child(5) { animation-delay: 240ms; }
+.stagger-in > *:nth-child(6) { animation-delay: 300ms; }
+.stagger-in > *:nth-child(7) { animation-delay: 360ms; }
+.stagger-in > *:nth-child(8) { animation-delay: 420ms; }
+
+/* ============================================================
+   Exit animation — fade out + shrink before removal.
+   Applied via .exiting class, then element is removed after
+   the animation completes (300ms).
+   ============================================================ */
+
+@keyframes fadeSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    max-height: 500px;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    border-width: 0;
+  }
+}
+
+.exiting {
+  animation: fadeSlideOut 0.3s ease-in forwards;
+  overflow: hidden;
+  pointer-events: none;
+}

@@ -7,6 +7,12 @@ import ModuleNotes from "@/components/modules/ModuleNotes";
 import CompletionOverlay from "@/components/ui/CompletionOverlay";
 import type { ModuleWithDetails, Domain, CompletionEvent } from "@/types";
 
+// Extended module type — includes joined operation/phase data from the API
+interface ModuleWithHierarchy extends ModuleWithDetails {
+  operation?: { title: string; goal?: { title: string; icon?: string } } | null;
+  phase?: { title: string } | null;
+}
+
 interface DayDetailProps {
   date: string;
   domains: Domain[];
@@ -14,7 +20,7 @@ interface DayDetailProps {
 }
 
 export default function DayDetail({ date, domains, onModuleChanged }: DayDetailProps) {
-  const [modules, setModules] = useState<ModuleWithDetails[]>([]);
+  const [modules, setModules] = useState<ModuleWithHierarchy[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [expandedNotes, setExpandedNotes] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -158,10 +164,22 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
 
                 {/* Module content */}
                 <div className="flex-1 min-w-0">
+                  {/* Hierarchy breadcrumb — only shown for linked modules */}
+                  {mod.operation && (
+                    <span
+                      className="text-[10px] font-mono block mb-0.5"
+                      style={{ color: "#d6d5cc" }}
+                    >
+                      {mod.operation.goal?.icon && `${mod.operation.goal.icon} `}
+                      {mod.operation.goal?.title && `${mod.operation.goal.title} → `}
+                      {mod.operation.title}
+                      {mod.phase && ` → ${mod.phase.title}`}
+                    </span>
+                  )}
                   <div className="flex items-center gap-2 mb-1">
                     <div
                       className="w-2 h-2 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: mod.domain?.color || "#6366f1" }}
+                      style={{ backgroundColor: mod.domain?.color || "#63c4f1" }}
                     />
                     <span
                       className={`font-medium transition-all duration-200 ${

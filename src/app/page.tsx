@@ -28,7 +28,7 @@ async function getDashboardData() {
     supabase.from("modules").select("domain_id, is_completed, scheduled_date, start_time, end_time"),
     supabase.from("user_stats").select("*").single(),
     supabase.from("domain_streaks").select("*, domain:domains(name, slug, color)"),
-    supabase.from("goals").select("*").eq("status", "completed"),
+    supabase.from("goals").select("*, domain:domains(name, slug, color)").eq("status", "completed"),
     supabase.from("operations").select("*, goal:goals(title, icon), phases(id)").eq("status", "active"),
   ]);
 
@@ -212,22 +212,49 @@ export default async function Dashboard() {
             Completed Objectives
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {completedGoals.map((goal: any) => (
-              <div
-                key={goal.id}
-                className="rounded-xl border border-emerald-900/50 bg-emerald-950/20 p-4"
-              >
-                <div className="flex items-center gap-2">
-                  {goal.icon && <span className="text-xl">{goal.icon}</span>}
-                  <h4 className="font-medium text-emerald-300">{goal.title}</h4>
+            {completedGoals.map((goal: any) => {
+              const domainColor = goal.domain?.color || "#6366f1";
+              return (
+                <div
+                  key={goal.id}
+                  className="relative rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 overflow-hidden"
+                  style={{ borderLeftWidth: "3px", borderLeftColor: domainColor }}
+                >
+                  {/* Accomplished badge — tactical style */}
+                  <div className="absolute top-3 right-3">
+                    <span
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-[0.15em] border"
+                      style={{
+                        color: domainColor,
+                        borderColor: `${domainColor}40`,
+                        backgroundColor: `${domainColor}10`,
+                      }}
+                    >
+                      <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      Accomplished
+                    </span>
+                  </div>
+
+                  {/* Goal info */}
+                  <div className="flex items-center gap-2 mb-1 pr-28">
+                    {goal.icon && <span className="text-xl">{goal.icon}</span>}
+                    <h4 className="font-medium text-zinc-100">{goal.title}</h4>
+                  </div>
+
+                  {/* Domain + date */}
+                  <div className="flex items-center gap-3 text-xs font-mono text-zinc-500">
+                    <span style={{ color: domainColor }}>{goal.domain?.name}</span>
+                    {goal.completed_at && (
+                      <span>
+                        {new Date(goal.completed_at).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                {goal.completed_at && (
-                  <p className="text-xs text-emerald-700 mt-1 font-mono">
-                    Achieved {new Date(goal.completed_at).toLocaleDateString()}
-                  </p>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

@@ -275,6 +275,7 @@ export default function OperationDetailPage({ params }: OperationDetailPageProps
               phase={sortedPhases.find((p: any) => p.id === expandedPhase)}
               color={color}
               operationId={operationId}
+              operationTitle={operation.title}
               onToggleModule={toggleModule}
               onRefresh={fetchOperation}
               onDeletePhase={(phaseId: string) => {
@@ -306,6 +307,7 @@ function PhaseDetail({
   phase,
   color,
   operationId,
+  operationTitle,
   onToggleModule,
   onRefresh,
   onDeletePhase,
@@ -313,6 +315,7 @@ function PhaseDetail({
   phase: any;
   color: string;
   operationId: string;
+  operationTitle: string;
   onToggleModule: (id: string, current: boolean) => void;
   onRefresh: () => void;
   onDeletePhase: (phaseId: string) => void;
@@ -436,7 +439,7 @@ function PhaseDetail({
             No modules in this phase yet. Add modules to start tracking.
           </div>
         ) : (
-          modules.map((mod: any) => (
+          modules.map((mod: any, index: number) => (
             <div key={mod.id} className="px-5 py-3 flex items-center gap-3">
               {/* Checkbox */}
               <button
@@ -462,8 +465,12 @@ function PhaseDetail({
                 </svg>
               </button>
 
-              {/* Module info */}
+              {/* Module info with context tag */}
               <div className="flex-1 min-w-0">
+                {/* Context breadcrumb: Operation → Phase → Module # */}
+                <span className="text-[10px] font-mono text-zinc-600 block mb-0.5" style={{ color: "#d6d5cc" }}>
+                  {operationTitle} → {phase.title} → M{String(index + 1).padStart(2, "0")}
+                </span>
                 <span
                   className={`text-sm transition-all duration-200 ${
                     mod.is_completed

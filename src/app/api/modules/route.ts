@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from("modules")
-    .select("*, domain:domains(*), notes:module_notes(*)")
+    .select("*, domain:domains(*), notes:module_notes(*), operation:operations(title, goal:goals(title, icon)), phase:phases(title)")
     .order("scheduled_date")
     .order("start_time", { nullsFirst: false });
 

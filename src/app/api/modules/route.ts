@@ -39,7 +39,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const body = await request.json();
 
-  const { title, description, domain_id, goal_id, scheduled_date, start_time, end_time } = body;
+  const {
+    title, description, domain_id, goal_id,
+    operation_id, phase_id,
+    scheduled_date, start_time, end_time,
+  } = body;
 
   if (!title || !domain_id || !scheduled_date) {
     return NextResponse.json(
@@ -55,6 +59,8 @@ export async function POST(request: NextRequest) {
       description: description || "",
       domain_id,
       goal_id: goal_id || null,
+      operation_id: operation_id || null,
+      phase_id: phase_id || null,
       scheduled_date,
       start_time: start_time || null,
       end_time: end_time || null,

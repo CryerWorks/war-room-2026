@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { formatDate, formatTime } from "@/lib/utils";
 import ModuleForm from "@/components/modules/ModuleForm";
 import ModuleNotes from "@/components/modules/ModuleNotes";
-import type { ModuleWithDetails, Domain } from "@/types";
+import CompletionOverlay from "@/components/ui/CompletionOverlay";
+import type { ModuleWithDetails, Domain, CompletionEvent } from "@/types";
 
 interface DayDetailProps {
   date: string;
@@ -17,6 +18,7 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
   const [showForm, setShowForm] = useState(false);
   const [expandedNotes, setExpandedNotes] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [completionEvents, setCompletionEvents] = useState<CompletionEvent[]>([]);
 
   const fetchModules = useCallback(async (showLoading = false) => {
     if (showLoading) setLoading(true);
@@ -53,6 +55,11 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
     });
 
     if (res.ok) {
+      const data = await res.json();
+      // Check for cascade completion events
+      if (data.completions && data.completions.length > 0) {
+        setCompletionEvents(data.completions);
+      }
       fetchModules();
       onModuleChanged();
     } else {
@@ -80,6 +87,14 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
   }
 
   return (
+    <>
+    {/* Completion overlay for cascade events */}
+    {completionEvents.length > 0 && (
+      <CompletionOverlay
+        events={completionEvents}
+        onDismiss={() => setCompletionEvents([])}
+      />
+    )}
     <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden">
       {/* Header */}
       <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
@@ -209,5 +224,6 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
         )}
       </div>
     </div>
+    </>
   );
 }

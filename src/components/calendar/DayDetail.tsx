@@ -39,6 +39,13 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
   }, [fetchModules]);
 
   async function toggleCompletion(moduleId: string, currentState: boolean) {
+    // Optimistic update — flip the UI immediately, don't wait for the server
+    setModules((prev) =>
+      prev.map((m) =>
+        m.id === moduleId ? { ...m, is_completed: !currentState } : m
+      )
+    );
+
     const res = await fetch(`/api/modules/${moduleId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -48,6 +55,13 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
     if (res.ok) {
       fetchModules();
       onModuleChanged();
+    } else {
+      // Revert if the server rejected it
+      setModules((prev) =>
+        prev.map((m) =>
+          m.id === moduleId ? { ...m, is_completed: currentState } : m
+        )
+      );
     }
   }
 
@@ -106,17 +120,25 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
                 {/* Completion checkbox */}
                 <button
                   onClick={() => toggleCompletion(mod.id, mod.is_completed)}
-                  className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                  className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
                     mod.is_completed
-                      ? "bg-emerald-500 border-emerald-500 text-white"
-                      : "border-zinc-300 dark:border-zinc-600 hover:border-emerald-400"
+                      ? "bg-emerald-500 border-emerald-500 text-white scale-110"
+                      : "border-zinc-300 dark:border-zinc-600 hover:border-emerald-400 scale-100"
                   }`}
                 >
-                  {mod.is_completed && (
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
+                  <svg
+                    className={`w-3 h-3 transition-all duration-200 ${
+                      mod.is_completed
+                        ? "opacity-100 scale-100"
+                        : "opacity-0 scale-50"
+                    }`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={3}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
                 </button>
 
                 {/* Module content */}
@@ -127,7 +149,7 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
                       style={{ backgroundColor: mod.domain?.color || "#6366f1" }}
                     />
                     <span
-                      className={`font-medium ${
+                      className={`font-medium transition-all duration-200 ${
                         mod.is_completed
                           ? "line-through text-zinc-400 dark:text-zinc-500"
                           : "text-zinc-900 dark:text-zinc-100"

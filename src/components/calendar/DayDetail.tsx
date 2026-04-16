@@ -95,10 +95,10 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
         onDismiss={() => setCompletionEvents([])}
       />
     )}
-    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden">
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 overflow-hidden">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+      <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-zinc-100">
           {formatDate(date)}
         </h3>
         <button
@@ -111,7 +111,7 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
 
       {/* Module creation form */}
       {showForm && (
-        <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950">
+        <div className="px-6 py-4 border-b border-zinc-800 bg-zinc-950">
           <ModuleForm
             date={date}
             domains={domains}
@@ -121,11 +121,11 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
       )}
 
       {/* Module list */}
-      <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
+      <div className="divide-y divide-zinc-800">
         {loading ? (
           <div className="px-6 py-8 text-center text-zinc-400">Loading...</div>
         ) : modules.length === 0 ? (
-          <div className="px-6 py-8 text-center text-zinc-400 dark:text-zinc-500">
+          <div className="px-6 py-8 text-center text-zinc-400 text-zinc-500">
             No modules scheduled. Click &quot;+ Add Module&quot; to get started.
           </div>
         ) : (
@@ -138,7 +138,7 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
                   className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
                     mod.is_completed
                       ? "bg-emerald-500 border-emerald-500 text-white scale-110"
-                      : "border-zinc-300 dark:border-zinc-600 hover:border-emerald-400 scale-100"
+                      : "border-zinc-600 hover:border-emerald-400 scale-100"
                   }`}
                 >
                   <svg
@@ -166,8 +166,8 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
                     <span
                       className={`font-medium transition-all duration-200 ${
                         mod.is_completed
-                          ? "line-through text-zinc-400 dark:text-zinc-500"
-                          : "text-zinc-900 dark:text-zinc-100"
+                          ? "line-through text-zinc-400 text-zinc-500"
+                          : "text-zinc-100"
                       }`}
                     >
                       {mod.title}
@@ -176,7 +176,7 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
 
                   {/* Time slot */}
                   {mod.start_time && (
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">
+                    <p className="text-xs text-zinc-500 text-zinc-400 mb-1">
                       {formatTime(mod.start_time)}
                       {mod.end_time && ` – ${formatTime(mod.end_time)}`}
                     </p>
@@ -184,7 +184,7 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
 
                   {/* Description */}
                   {mod.description && (
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                    <p className="text-sm text-zinc-500 text-zinc-400">
                       {mod.description}
                     </p>
                   )}
@@ -195,7 +195,7 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
                       onClick={() =>
                         setExpandedNotes(expandedNotes === mod.id ? null : mod.id)
                       }
-                      className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+                      className="text-xs text-zinc-400 hover:text-zinc-300 transition-colors"
                     >
                       Notes ({mod.notes?.length || 0})
                     </button>

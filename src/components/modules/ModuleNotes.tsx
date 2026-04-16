@@ -49,9 +49,9 @@ export default function ModuleNotes({ moduleId, notes, onNotesChanged }: ModuleN
           {notes.map((note) => (
             <div
               key={note.id}
-              className="flex items-start justify-between gap-2 p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800"
+              className="flex items-start justify-between gap-2 p-2 rounded-lg bg-zinc-800"
             >
-              <p className="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap">
+              <p className="text-sm text-zinc-300 whitespace-pre-wrap">
                 {note.content}
               </p>
               <button
@@ -72,12 +72,12 @@ export default function ModuleNotes({ moduleId, notes, onNotesChanged }: ModuleN
           value={newNote}
           onChange={(e) => setNewNote(e.target.value)}
           placeholder="Add a note..."
-          className="flex-1 px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+          className="flex-1 px-3 py-1.5 rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
         />
         <button
           type="submit"
           disabled={submitting || !newNote.trim()}
-          className="px-3 py-1.5 rounded-lg bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-sm font-medium hover:bg-zinc-300 dark:hover:bg-zinc-600 disabled:opacity-50 transition-colors"
+          className="px-3 py-1.5 rounded-lg bg-zinc-700 text-zinc-300 text-sm font-medium hover:bg-zinc-600 disabled:opacity-50 transition-colors"
         >
           Add
         </button>

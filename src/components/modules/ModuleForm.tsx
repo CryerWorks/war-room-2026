@@ -48,7 +48,7 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Title */}
       <div>
-        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+        <label className="block text-sm font-medium text-zinc-300 mb-1">
           Title
         </label>
         <input
@@ -57,13 +57,13 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. German vocabulary review"
           required
-          className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+          className="w-full px-3 py-2 rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
         />
       </div>
 
       {/* Domain selector */}
       <div>
-        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+        <label className="block text-sm font-medium text-zinc-300 mb-1">
           Domain
         </label>
         <div className="flex gap-2">
@@ -75,7 +75,7 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors border ${
                 domainId === domain.id
                   ? "border-transparent text-white"
-                  : "border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  : "border-zinc-700 text-zinc-400 hover:bg-zinc-800"
               }`}
               style={
                 domainId === domain.id
@@ -96,32 +96,32 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
       {/* Time range */}
       <div className="flex gap-4">
         <div className="flex-1">
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+          <label className="block text-sm font-medium text-zinc-300 mb-1">
             Start Time (optional)
           </label>
           <input
             type="time"
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            className="w-full px-3 py-2 rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
           />
         </div>
         <div className="flex-1">
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+          <label className="block text-sm font-medium text-zinc-300 mb-1">
             End Time (optional)
           </label>
           <input
             type="time"
             value={endTime}
             onChange={(e) => setEndTime(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            className="w-full px-3 py-2 rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
           />
         </div>
       </div>
 
       {/* Description */}
       <div>
-        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+        <label className="block text-sm font-medium text-zinc-300 mb-1">
           Description (optional)
         </label>
         <textarea
@@ -129,7 +129,7 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
           onChange={(e) => setDescription(e.target.value)}
           placeholder="What is this module about?"
           rows={2}
-          className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+          className="w-full px-3 py-2 rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
         />
       </div>
 

@@ -37,10 +37,10 @@ export default function CalendarPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+        <h2 className="text-2xl font-bold text-zinc-100">
           Calendar
         </h2>
-        <p className="mt-1 text-zinc-500 dark:text-zinc-400">
+        <p className="mt-1 text-zinc-400">
           Schedule and track your daily modules.
         </p>
       </div>

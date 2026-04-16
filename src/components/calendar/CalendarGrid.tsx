@@ -73,16 +73,16 @@ export default function CalendarGrid({ onSelectDate, selectedDate }: CalendarGri
       <div className="flex items-center justify-between mb-6">
         <button
           onClick={prevMonth}
-          className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-400"
+          className="p-2 rounded-lg hover:bg-zinc-800 transition-colors text-zinc-400"
         >
           &larr; Prev
         </button>
-        <h3 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+        <h3 className="text-xl font-semibold text-zinc-100">
           {MONTH_NAMES[month]} {year}
         </h3>
         <button
           onClick={nextMonth}
-          className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-400"
+          className="p-2 rounded-lg hover:bg-zinc-800 transition-colors text-zinc-400"
         >
           Next &rarr;
         </button>
@@ -93,7 +93,7 @@ export default function CalendarGrid({ onSelectDate, selectedDate }: CalendarGri
         {DAY_HEADERS.map((day) => (
           <div
             key={day}
-            className="text-center text-xs font-medium text-zinc-500 dark:text-zinc-400 py-2"
+            className="text-center text-xs font-medium text-zinc-400 py-2"
           >
             {day}
           </div>
@@ -101,7 +101,7 @@ export default function CalendarGrid({ onSelectDate, selectedDate }: CalendarGri
       </div>
 
       {/* Day grid */}
-      <div className="grid grid-cols-7 border-t border-l border-zinc-200 dark:border-zinc-800">
+      <div className="grid grid-cols-7 border-t border-l border-zinc-800">
         {days.map((date, i) => {
           const dateStr = toDateString(date);
           const isCurrentMonth = date.getMonth() === month;
@@ -114,15 +114,15 @@ export default function CalendarGrid({ onSelectDate, selectedDate }: CalendarGri
               key={i}
               onClick={() => onSelectDate(dateStr)}
               className={`
-                relative min-h-[80px] p-2 text-left border-r border-b border-zinc-200 dark:border-zinc-800
+                relative min-h-[80px] p-2 text-left border-r border-b border-zinc-800
                 transition-colors
                 ${isCurrentMonth
-                  ? "bg-white dark:bg-zinc-900"
-                  : "bg-zinc-50 dark:bg-zinc-950"
+                  ? "bg-zinc-900/50"
+                  : "bg-zinc-950"
                 }
                 ${isSelected
                   ? "ring-2 ring-inset ring-blue-500"
-                  : "hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                  : "hover:bg-zinc-800/50"
                 }
               `}
             >
@@ -133,8 +133,8 @@ export default function CalendarGrid({ onSelectDate, selectedDate }: CalendarGri
                   ${isToday
                     ? "bg-blue-500 text-white w-7 h-7 rounded-full flex items-center justify-center"
                     : isCurrentMonth
-                      ? "text-zinc-900 dark:text-zinc-100"
-                      : "text-zinc-400 dark:text-zinc-600"
+                      ? "text-zinc-100"
+                      : "text-zinc-600"
                   }
                 `}
               >

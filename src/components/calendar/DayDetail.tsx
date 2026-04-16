@@ -18,8 +18,8 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
   const [expandedNotes, setExpandedNotes] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchModules = useCallback(async () => {
-    setLoading(true);
+  const fetchModules = useCallback(async (showLoading = false) => {
+    if (showLoading) setLoading(true);
     try {
       const res = await fetch(`/api/modules?date=${date}`);
       if (res.ok) {
@@ -33,7 +33,7 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
   }, [date]);
 
   useEffect(() => {
-    fetchModules();
+    fetchModules(true); // show loading only when switching days
     setShowForm(false);
     setExpandedNotes(null);
   }, [fetchModules]);

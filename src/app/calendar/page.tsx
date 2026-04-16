@@ -1,10 +1,38 @@
-export default function CalendarPage() {
-  // We'll build the full calendar in Phase 5
-  // For now, this is a working route that proves our routing is set up
+"use client";
 
-  const today = new Date();
-  const monthName = today.toLocaleString("default", { month: "long" });
-  const year = today.getFullYear();
+import { useState, useEffect, useCallback } from "react";
+import CalendarGrid from "@/components/calendar/CalendarGrid";
+import DayDetail from "@/components/calendar/DayDetail";
+import { toDateString } from "@/lib/calendar";
+import type { Domain } from "@/types";
+
+export default function CalendarPage() {
+  const [selectedDate, setSelectedDate] = useState<string>(
+    toDateString(new Date())
+  );
+  const [domains, setDomains] = useState<Domain[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    async function fetchDomains() {
+      try {
+        const res = await fetch("/api/domains");
+        if (res.ok) {
+          const data = await res.json();
+          setDomains(data.domains.map((d: { domain: Domain }) => d.domain));
+        }
+      } catch {
+        // domains will stay empty, form won't render domain buttons
+      }
+    }
+    fetchDomains();
+  }, []);
+
+  // Called when a module is created, toggled, or deleted
+  // so the calendar grid refreshes its dot indicators
+  const handleModuleChanged = useCallback(() => {
+    setRefreshKey((k) => k + 1);
+  }, []);
 
   return (
     <div className="space-y-8">
@@ -13,15 +41,30 @@ export default function CalendarPage() {
           Calendar
         </h2>
         <p className="mt-1 text-zinc-500 dark:text-zinc-400">
-          {monthName} {year} — schedule and track your daily modules.
+          Schedule and track your daily modules.
         </p>
       </div>
 
-      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-12 bg-white dark:bg-zinc-900 text-center">
-        <p className="text-zinc-400 dark:text-zinc-500">
-          Calendar view coming soon. This will show a month grid with your
-          scheduled modules for each day.
-        </p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Calendar grid — takes 2/3 of the space on large screens */}
+        <div className="lg:col-span-2">
+          <CalendarGrid
+            key={refreshKey}
+            onSelectDate={setSelectedDate}
+            selectedDate={selectedDate}
+          />
+        </div>
+
+        {/* Day detail panel — takes 1/3 */}
+        <div className="lg:col-span-1">
+          {selectedDate && domains.length > 0 && (
+            <DayDetail
+              date={selectedDate}
+              domains={domains}
+              onModuleChanged={handleModuleChanged}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

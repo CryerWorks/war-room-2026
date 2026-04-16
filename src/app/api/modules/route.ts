@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-// GET /api/modules?date=2026-04-15&domain_id=xxx
-// Fetch modules, optionally filtered by date and/or domain
+// GET /api/modules?date=2026-04-15&start_date=...&end_date=...&domain_id=xxx
+// Fetch modules, optionally filtered by date/range and/or domain
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const date = searchParams.get("date");
+  const startDate = searchParams.get("start_date");
+  const endDate = searchParams.get("end_date");
   const domainId = searchParams.get("domain_id");
 
   let query = supabase
@@ -16,6 +18,8 @@ export async function GET(request: NextRequest) {
 
   if (date) {
     query = query.eq("scheduled_date", date);
+  } else if (startDate && endDate) {
+    query = query.gte("scheduled_date", startDate).lte("scheduled_date", endDate);
   }
 
   if (domainId) {

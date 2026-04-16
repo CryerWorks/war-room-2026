@@ -1,36 +1,98 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# War Room 2026
 
-## Getting Started
+A personal goal-tracking application built as a hands-on exercise in full-stack development, Git workflow, and deployment operations.
 
-First, run the development server:
+The app tracks progress across three development domains — linguistic, technical, and physical — using a hierarchical system of goals, operations, phases, and daily modules. Built from scratch over the course of a single development session as a learning project.
+
+## Purpose
+
+This project exists primarily as an educational exercise. The goals were:
+
+- Build a complete full-stack application from an empty directory to production deployment
+- Practice professional Git workflow: feature branching, pull requests, code review, squash merging
+- Gain experience with modern web tooling (Next.js, TypeScript, Supabase, Vercel)
+- Understand systems design decisions by making them firsthand
+- Create something functional enough to actually use for personal development tracking
+
+## Architecture
+
+```
+Domain (Linguistic, Skill, Physical)
+  └── Goal
+        └── Operation
+              └── Phase
+                    └── Module (daily scheduled activity)
+                          └── Note
+```
+
+Modules are the atomic unit — scheduled on specific dates with optional time slots. They can exist standalone (quick calendar items) or linked to a phase within an operation. Completing modules cascades upward: all modules done completes a phase, all phases completes an operation, all operations achieves a goal.
+
+## Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 16 (App Router) |
+| Language | TypeScript |
+| Styling | Tailwind CSS |
+| Database | PostgreSQL via Supabase |
+| Hosting | Vercel |
+| Version Control | Git + GitHub |
+
+## Features
+
+- Hierarchical goal tracking with cascading completion
+- Calendar view with module scheduling, completion toggling, and notes
+- Operation command center with phase timeline and schedule view
+- Sequential phase progression with auto-advance
+- Completion overlays on phase, operation, and goal achievement
+- Inline editing and deletion for all entities
+- Hours tracking computed from module time slots
+- Streak tracking (global and per-domain)
+- Module linking via cascading selector (goal → operation → phase)
+- Hierarchy breadcrumbs on calendar and operation views
+- Mobile responsive layout
+
+## Visual Design
+
+Styled after a tactical HUD aesthetic. Dark-only theme with hexagonal grid background, monospaced data readouts, corner bracket indicators, a system boot sequence on first visit, page transition glitch effects, and domain-colored accents throughout.
+
+## Local Development
+
+```bash
+git clone https://github.com/CryerWorks/war-room-2026.git
+cd war-room-2026
+npm install
+```
+
+Create a `.env.local` file with your Supabase credentials (see `.env.example` for the required variables). Run the migration scripts in `supabase/migrations/` in order via the Supabase SQL Editor.
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/                     # Next.js App Router pages and API routes
+│   ├── api/                 # REST endpoints (domains, goals, operations, phases, modules, notes, streaks)
+│   ├── calendar/            # Calendar view
+│   ├── domains/             # Domain list, detail, and operation detail pages
+│   └── page.tsx             # Dashboard
+├── components/              # React components
+│   ├── calendar/            # CalendarGrid, DayDetail
+│   ├── dashboard/           # DashboardShell, DomainCard
+│   ├── goals/               # GoalCard, GoalForm
+│   ├── modules/             # ModuleItem, ModuleForm, ModuleNotes
+│   ├── operations/          # OperationCard, OperationForm
+│   ├── phases/              # PhaseForm
+│   └── ui/                  # Shared primitives (ProgressBar, StepperTimeline, CompletionOverlay, etc.)
+├── lib/                     # Utilities (supabase client, hours, streaks, calendar helpers)
+└── types/                   # TypeScript interfaces
+```
 
-## Learn More
+## License
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Personal project. Not intended for redistribution.

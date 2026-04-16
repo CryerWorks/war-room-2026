@@ -10,18 +10,18 @@ export default function DomainCard({ progress }: DomainCardProps) {
     progress;
 
   return (
-    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 bg-white dark:bg-zinc-900">
+    <div className="rounded-xl border border-zinc-800 p-6 bg-zinc-900/50">
       <div className="flex items-center gap-3 mb-4">
         <div
           className="w-3 h-3 rounded-full"
           style={{ backgroundColor: domain.color }}
         />
-        <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+        <h3 className="text-lg font-semibold text-zinc-100">
           {domain.name}
         </h3>
       </div>
 
-      <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+      <p className="text-sm text-zinc-400 mb-4">
         {domain.description}
       </p>
 

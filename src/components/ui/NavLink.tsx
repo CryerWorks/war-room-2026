@@ -15,10 +15,10 @@ export default function NavLink({ href, children }: NavLinkProps) {
   return (
     <Link
       href={href}
-      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+      className={`px-3 py-1.5 rounded text-xs font-mono uppercase tracking-wider transition-colors ${
         isActive
-          ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-          : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800"
+          ? "bg-zinc-800 text-zinc-100 border border-zinc-700"
+          : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50"
       }`}
     >
       {children}

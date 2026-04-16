@@ -28,12 +28,12 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-zinc-50 dark:bg-zinc-950">
-        <header className="sticky top-0 z-50 border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-sm">
+      <body className="min-h-full flex flex-col">
+        <header className="sticky top-0 z-50 border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-md">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-                War Room 2026
+            <div className="flex items-center justify-between h-14">
+              <h1 className="text-sm font-mono font-bold tracking-[0.2em] uppercase text-zinc-300">
+                War Room <span className="text-zinc-500">2026</span>
               </h1>
               <nav className="flex items-center gap-1">
                 <NavLink href="/">Dashboard</NavLink>

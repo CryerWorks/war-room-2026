@@ -70,21 +70,21 @@ export default function CalendarGrid({ onSelectDate, selectedDate }: CalendarGri
   return (
     <div>
       {/* Month navigation */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
         <button
           onClick={prevMonth}
-          className="p-2 rounded-lg hover:bg-zinc-800 transition-colors text-zinc-400"
+          className="p-1.5 sm:p-2 rounded-lg hover:bg-zinc-800 transition-colors text-zinc-400 text-sm"
         >
-          &larr; Prev
+          &larr; <span className="hidden sm:inline">Prev</span>
         </button>
-        <h3 className="text-xl font-semibold text-zinc-100">
+        <h3 className="text-base sm:text-xl font-semibold text-zinc-100">
           {MONTH_NAMES[month]} {year}
         </h3>
         <button
           onClick={nextMonth}
-          className="p-2 rounded-lg hover:bg-zinc-800 transition-colors text-zinc-400"
+          className="p-1.5 sm:p-2 rounded-lg hover:bg-zinc-800 transition-colors text-zinc-400 text-sm"
         >
-          Next &rarr;
+          <span className="hidden sm:inline">Next</span> &rarr;
         </button>
       </div>
 
@@ -93,7 +93,7 @@ export default function CalendarGrid({ onSelectDate, selectedDate }: CalendarGri
         {DAY_HEADERS.map((day) => (
           <div
             key={day}
-            className="text-center text-xs font-medium text-zinc-400 py-2"
+            className="text-center text-[10px] sm:text-xs font-medium text-zinc-400 py-1 sm:py-2"
           >
             {day}
           </div>
@@ -114,7 +114,7 @@ export default function CalendarGrid({ onSelectDate, selectedDate }: CalendarGri
               key={i}
               onClick={() => onSelectDate(dateStr)}
               className={`
-                relative min-h-[80px] p-2 text-left border-r border-b border-zinc-800
+                relative min-h-[52px] sm:min-h-[80px] p-1 sm:p-2 text-left border-r border-b border-zinc-800
                 transition-colors
                 ${isCurrentMonth
                   ? "bg-zinc-900/50"
@@ -131,7 +131,7 @@ export default function CalendarGrid({ onSelectDate, selectedDate }: CalendarGri
                 className={`
                   text-sm font-medium
                   ${isToday
-                    ? "bg-blue-500 text-white w-7 h-7 rounded-full flex items-center justify-center"
+                    ? "bg-blue-500 text-white w-5 h-5 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-xs sm:text-sm"
                     : isCurrentMonth
                       ? "text-zinc-100"
                       : "text-zinc-600"

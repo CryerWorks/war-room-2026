@@ -32,10 +32,12 @@ export default function RootLayout({
         <header className="sticky top-0 z-50 border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-md">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-14">
-              <h1 className="text-sm font-mono font-bold tracking-[0.2em] uppercase text-zinc-300">
-                War Room <span className="text-zinc-500">2026</span>
+              <h1 className="text-xs sm:text-sm font-mono font-bold tracking-[0.2em] uppercase text-zinc-300">
+                <span className="hidden sm:inline">War Room </span>
+                <span className="sm:hidden">WR </span>
+                <span className="text-zinc-500">2026</span>
               </h1>
-              <nav className="flex items-center gap-1">
+              <nav className="flex items-center gap-0.5 sm:gap-1">
                 <NavLink href="/">Dashboard</NavLink>
                 <NavLink href="/calendar">Calendar</NavLink>
                 <NavLink href="/domains">Domains</NavLink>

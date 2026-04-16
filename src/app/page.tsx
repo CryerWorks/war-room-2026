@@ -73,10 +73,10 @@ export default async function Dashboard() {
   return (
     <div className="space-y-8">
       {/* Header with streak */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-zinc-100">Dashboard</h2>
-          <p className="mt-1 text-zinc-400">Your 2026 progress at a glance.</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-zinc-100">Dashboard</h2>
+          <p className="mt-1 text-sm sm:text-base text-zinc-400">Your 2026 progress at a glance.</p>
         </div>
         {globalStreak && (
           <StreakBadge
@@ -220,10 +220,14 @@ export default async function Dashboard() {
                   className="relative rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 overflow-hidden"
                   style={{ borderLeftWidth: "3px", borderLeftColor: domainColor }}
                 >
-                  {/* Accomplished badge — tactical style */}
-                  <div className="absolute top-3 right-3">
+                  {/* Goal info + accomplished badge */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">
+                    <div className="flex items-center gap-2">
+                      {goal.icon && <span className="text-xl">{goal.icon}</span>}
+                      <h4 className="font-medium text-zinc-100">{goal.title}</h4>
+                    </div>
                     <span
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-[0.15em] border"
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-[0.15em] border flex-shrink-0"
                       style={{
                         color: domainColor,
                         borderColor: `${domainColor}40`,
@@ -235,12 +239,6 @@ export default async function Dashboard() {
                       </svg>
                       Accomplished
                     </span>
-                  </div>
-
-                  {/* Goal info */}
-                  <div className="flex items-center gap-2 mb-1 pr-28">
-                    {goal.icon && <span className="text-xl">{goal.icon}</span>}
-                    <h4 className="font-medium text-zinc-100">{goal.title}</h4>
                   </div>
 
                   {/* Domain + date */}

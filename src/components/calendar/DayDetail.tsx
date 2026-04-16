@@ -103,13 +103,13 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
     )}
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 overflow-hidden">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-zinc-100">
+      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-zinc-800 flex items-center justify-between gap-2">
+        <h3 className="text-base sm:text-lg font-semibold text-zinc-100">
           {formatDate(date)}
         </h3>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="px-3 py-1.5 text-sm font-medium rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+          className="px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors flex-shrink-0"
         >
           {showForm ? "Cancel" : "+ Add Module"}
         </button>
@@ -117,7 +117,7 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
 
       {/* Module creation form */}
       {showForm && (
-        <div className="px-6 py-4 border-b border-zinc-800 bg-zinc-950">
+        <div className="px-4 sm:px-6 py-4 border-b border-zinc-800 bg-zinc-950">
           <ModuleForm
             date={date}
             domains={domains}
@@ -136,7 +136,7 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
           </div>
         ) : (
           modules.map((mod) => (
-            <div key={mod.id} className="px-6 py-4">
+            <div key={mod.id} className="px-4 sm:px-6 py-3 sm:py-4">
               <div className="flex items-start gap-3">
                 {/* Completion checkbox */}
                 <button

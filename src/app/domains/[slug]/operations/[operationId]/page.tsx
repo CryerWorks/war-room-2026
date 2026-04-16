@@ -277,6 +277,15 @@ export default function OperationDetailPage({ params }: OperationDetailPageProps
               operationId={operationId}
               onToggleModule={toggleModule}
               onRefresh={fetchOperation}
+              onDeletePhase={(phaseId: string) => {
+                // The PhaseDetail component handles its own exit animation
+                // via the exiting class. We just wait for it, then delete.
+                setTimeout(async () => {
+                  await fetch(`/api/phases/${phaseId}`, { method: "DELETE" });
+                  setExpandedPhase(null);
+                  fetchOperation();
+                }, 300);
+              }}
             />
           ) : (
             <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-8 text-center text-zinc-500">
@@ -299,14 +308,18 @@ function PhaseDetail({
   operationId,
   onToggleModule,
   onRefresh,
+  onDeletePhase,
 }: {
   phase: any;
   color: string;
   operationId: string;
   onToggleModule: (id: string, current: boolean) => void;
   onRefresh: () => void;
+  onDeletePhase: (phaseId: string) => void;
 }) {
   const [showAddModule, setShowAddModule] = useState(false);
+  const [confirmDeletePhase, setConfirmDeletePhase] = useState(false);
+  const [exitingPhase, setExitingPhase] = useState(false);
   const [newModuleTitle, setNewModuleTitle] = useState("");
   const [newModuleDate, setNewModuleDate] = useState(
     new Date().toISOString().split("T")[0]
@@ -364,7 +377,7 @@ function PhaseDetail({
   }
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 overflow-hidden">
+    <div className={`rounded-xl border border-zinc-800 bg-zinc-900/50 overflow-hidden ${exitingPhase ? "exiting" : ""}`}>
       {/* Phase header */}
       <div className="px-5 py-4 border-b border-zinc-800">
         <div className="flex items-center justify-between">
@@ -372,7 +385,35 @@ function PhaseDetail({
             <h3 className="font-semibold text-zinc-100">{phase.title}</h3>
             <StatusBadge status={phase.status} />
           </div>
-          <HoursDisplay hours={hours} />
+          <div className="flex items-center gap-3">
+            <HoursDisplay hours={hours} />
+            {confirmDeletePhase ? (
+              <span className="flex items-center gap-1">
+                <button
+                  onClick={() => {
+                    setExitingPhase(true);
+                    onDeletePhase(phase.id);
+                  }}
+                  className="text-xs text-red-400 font-medium hover:text-red-300"
+                >
+                  Confirm
+                </button>
+                <button
+                  onClick={() => setConfirmDeletePhase(false)}
+                  className="text-xs text-zinc-500 hover:text-zinc-300"
+                >
+                  / Cancel
+                </button>
+              </span>
+            ) : (
+              <button
+                onClick={() => setConfirmDeletePhase(true)}
+                className="text-xs text-red-400/60 hover:text-red-400 transition-colors"
+              >
+                Delete Phase
+              </button>
+            )}
+          </div>
         </div>
         {phase.description && (
           <p className="text-sm text-zinc-500 mt-1">{phase.description}</p>

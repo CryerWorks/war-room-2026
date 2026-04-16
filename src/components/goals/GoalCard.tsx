@@ -1,7 +1,7 @@
-// GoalCard — displays a goal with its operations and progress.
-// This is the main card on the domain detail page.
-// It shows the goal icon, title, progress stats, and a list of operations.
-// Clicking the card expands/collapses the operation list (accordion pattern).
+// GoalCard — displays a goal with its operations, progress, and management controls.
+// Expanding reveals: operations list, edit/delete controls, add operation form.
+// Edit mode transforms the header into a pre-filled form.
+// Delete requires confirmation to prevent accidental cascading deletes.
 
 "use client";
 
@@ -50,8 +50,18 @@ interface GoalCardProps {
 export default function GoalCard({ domainSlug, goal, color, onUpdated }: GoalCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [showOpForm, setShowOpForm] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [exiting, setExiting] = useState(false);
 
-  // Compute progress across all operations
+  // Edit form state — pre-filled with current values
+  const [editTitle, setEditTitle] = useState(goal.title);
+  const [editDescription, setEditDescription] = useState(goal.description);
+  const [editIcon, setEditIcon] = useState(goal.icon || "");
+  const [editTargetDate, setEditTargetDate] = useState(goal.target_date || "");
+  const [saving, setSaving] = useState(false);
+
+  // Compute progress
   const allModules = goal.operations.flatMap((op) =>
     op.phases.flatMap((p) => p.modules)
   );
@@ -62,8 +72,41 @@ export default function GoalCard({ domainSlug, goal, color, onUpdated }: GoalCar
     (o) => o.status === "completed"
   ).length;
 
+  async function handleSave() {
+    if (!editTitle.trim()) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/goals/${goal.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: editTitle.trim(),
+          description: editDescription.trim(),
+          icon: editIcon.trim() || null,
+          target_date: editTargetDate || null,
+        }),
+      });
+      if (res.ok) {
+        setEditing(false);
+        onUpdated();
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    // Stage 1: play exit animation
+    setExiting(true);
+    // Stage 2: after animation completes (300ms), actually delete
+    setTimeout(async () => {
+      const res = await fetch(`/api/goals/${goal.id}`, { method: "DELETE" });
+      if (res.ok) onUpdated();
+    }, 300);
+  }
+
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 overflow-hidden">
+    <div className={`rounded-xl border border-zinc-800 bg-zinc-900/50 overflow-hidden ${exiting ? "exiting" : ""}`}>
       {/* Clickable header */}
       <button
         onClick={() => setExpanded(!expanded)}
@@ -71,27 +114,19 @@ export default function GoalCard({ domainSlug, goal, color, onUpdated }: GoalCar
       >
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            {goal.icon && (
-              <span className="text-2xl">{goal.icon}</span>
-            )}
+            {goal.icon && <span className="text-2xl">{goal.icon}</span>}
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold text-zinc-100">{goal.title}</h3>
                 <StatusBadge status={goal.status} />
               </div>
               {goal.description && (
-                <p className="text-sm text-zinc-500 mt-0.5">
-                  {goal.description}
-                </p>
+                <p className="text-sm text-zinc-500 mt-0.5">{goal.description}</p>
               )}
             </div>
           </div>
-
-          {/* Expand arrow */}
           <svg
-            className={`w-5 h-5 text-zinc-500 transition-transform ${
-              expanded ? "rotate-180" : ""
-            }`}
+            className={`w-5 h-5 text-zinc-500 transition-transform ${expanded ? "rotate-180" : ""}`}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -101,7 +136,6 @@ export default function GoalCard({ domainSlug, goal, color, onUpdated }: GoalCar
           </svg>
         </div>
 
-        {/* Progress stats */}
         <div className="mt-3">
           <ProgressStats
             completed={completedModules}
@@ -112,61 +146,154 @@ export default function GoalCard({ domainSlug, goal, color, onUpdated }: GoalCar
           />
         </div>
 
-        {/* Operations summary line */}
         <div className="mt-2 flex items-center gap-4 text-xs text-zinc-500">
           <span className="font-mono">
             {completedOps}/{goal.operations.length} operations
           </span>
-          {goal.target_date && (
-            <span>Target: {goal.target_date}</span>
-          )}
+          {goal.target_date && <span>Target: {goal.target_date}</span>}
           {totalHours > 0 && <HoursDisplay hours={totalHours} />}
         </div>
       </button>
 
-      {/* Expanded: show operations */}
-      {expanded && (
+      {/* Expanded content — accordion animated via CSS grid trick */}
+      <div className={`accordion ${expanded ? "open" : ""}`}>
+        <div>
         <div className="border-t border-zinc-800">
-          {goal.operations.length === 0 ? (
-            <div className="px-5 py-6 text-center text-zinc-500 text-sm">
-              No operations yet. Create one to start structuring your work.
+          {/* Edit form (replaces content when editing) */}
+          {editing ? (
+            <div className="px-5 py-4 space-y-3 bg-zinc-950/50">
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={editIcon}
+                  onChange={(e) => setEditIcon(e.target.value)}
+                  placeholder="🎯"
+                  maxLength={2}
+                  className="w-12 h-10 text-center text-lg rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                />
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="flex-1 px-3 py-2 rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                />
+              </div>
+              <textarea
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                placeholder="Description"
+                rows={2}
+                className="w-full px-3 py-2 rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+              />
+              <input
+                type="date"
+                value={editTargetDate}
+                onChange={(e) => setEditTargetDate(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSave}
+                  disabled={saving || !editTitle.trim()}
+                  className="flex-1 py-2 rounded-lg bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 disabled:opacity-50 transition-colors"
+                >
+                  {saving ? "Saving..." : "Save Changes"}
+                </button>
+                <button
+                  onClick={() => {
+                    setEditing(false);
+                    setEditTitle(goal.title);
+                    setEditDescription(goal.description);
+                    setEditIcon(goal.icon || "");
+                    setEditTargetDate(goal.target_date || "");
+                  }}
+                  className="px-4 py-2 rounded-lg border border-zinc-700 text-zinc-400 text-sm hover:bg-zinc-800 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           ) : (
-            <div className="divide-y divide-zinc-800">
-              {goal.operations.map((op) => (
-                <OperationCard
-                  key={op.id}
-                  operation={op}
-                  color={color}
-                  domainSlug={domainSlug}
-                />
-              ))}
-            </div>
-          )}
+            <>
+              {/* Management controls */}
+              <div className="px-5 py-2 flex items-center gap-3 border-b border-zinc-800 bg-zinc-950/30">
+                <button
+                  onClick={() => setEditing(true)}
+                  className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
+                >
+                  Edit
+                </button>
+                {confirmDelete ? (
+                  <span className="flex items-center gap-2">
+                    <span className="text-xs text-red-400">Delete this goal and all its operations?</span>
+                    <button
+                      onClick={handleDelete}
+                      className="text-xs text-red-400 font-medium hover:text-red-300 transition-colors"
+                    >
+                      Yes, delete
+                    </button>
+                    <button
+                      onClick={() => setConfirmDelete(false)}
+                      className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => setConfirmDelete(true)}
+                    className="text-xs text-red-400/60 hover:text-red-400 transition-colors"
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
 
-          {/* Add operation button/form */}
-          <div className="px-5 py-3 border-t border-zinc-800">
-            {showOpForm ? (
-              <OperationForm
-                goalId={goal.id}
-                domainId={goal.domain_id}
-                onCreated={() => {
-                  setShowOpForm(false);
-                  onUpdated();
-                }}
-                onCancel={() => setShowOpForm(false)}
-              />
-            ) : (
-              <button
-                onClick={() => setShowOpForm(true)}
-                className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
-              >
-                + Add Operation
-              </button>
-            )}
-          </div>
+              {/* Operations list */}
+              {goal.operations.length === 0 ? (
+                <div className="px-5 py-6 text-center text-zinc-500 text-sm">
+                  No operations yet. Create one to start structuring your work.
+                </div>
+              ) : (
+                <div className="divide-y divide-zinc-800 stagger-in">
+                  {goal.operations.map((op) => (
+                    <OperationCard
+                      key={op.id}
+                      operation={op}
+                      color={color}
+                      domainSlug={domainSlug}
+                      onUpdated={onUpdated}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Add operation */}
+              <div className="px-5 py-3 border-t border-zinc-800">
+                {showOpForm ? (
+                  <OperationForm
+                    goalId={goal.id}
+                    domainId={goal.domain_id}
+                    onCreated={() => {
+                      setShowOpForm(false);
+                      onUpdated();
+                    }}
+                    onCancel={() => setShowOpForm(false)}
+                  />
+                ) : (
+                  <button
+                    onClick={() => setShowOpForm(true)}
+                    className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                  >
+                    + Add Operation
+                  </button>
+                )}
+              </div>
+            </>
+          )}
         </div>
-      )}
+        </div>
+      </div>
     </div>
   );
 }

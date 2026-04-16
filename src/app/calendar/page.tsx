@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import ScrambleText from "@/components/ui/ScrambleText";
+import PageReveal from "@/components/ui/PageReveal";
 import CalendarGrid from "@/components/calendar/CalendarGrid";
 import DayDetail from "@/components/calendar/DayDetail";
 import { toDateString } from "@/lib/calendar";
@@ -38,34 +40,36 @@ export default function CalendarPage() {
     <div className="space-y-8">
       <div>
         <h2 className="text-2xl font-bold text-zinc-100">
-          Calendar
+          <ScrambleText text="Calendar" delay={100} speed={30} />
         </h2>
         <p className="mt-1 text-zinc-400">
-          Schedule and track your daily modules.
+          <ScrambleText text="Schedule and track your daily modules." delay={350} speed={20} />
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Calendar grid — takes 2/3 of the space on large screens */}
-        <div className="lg:col-span-2">
-          <CalendarGrid
-            key={refreshKey}
-            onSelectDate={setSelectedDate}
-            selectedDate={selectedDate}
-          />
-        </div>
-
-        {/* Day detail panel — takes 1/3 */}
-        <div className="lg:col-span-1">
-          {selectedDate && domains.length > 0 && (
-            <DayDetail
-              date={selectedDate}
-              domains={domains}
-              onModuleChanged={handleModuleChanged}
+      <PageReveal delay={900}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Calendar grid — takes 2/3 of the space on large screens */}
+          <div className="lg:col-span-2">
+            <CalendarGrid
+              key={refreshKey}
+              onSelectDate={setSelectedDate}
+              selectedDate={selectedDate}
             />
+          </div>
+
+          {/* Day detail panel — takes 1/3 */}
+          <div className="lg:col-span-1">
+            {selectedDate && domains.length > 0 && (
+              <DayDetail
+                date={selectedDate}
+                domains={domains}
+                onModuleChanged={handleModuleChanged}
+              />
           )}
+          </div>
         </div>
-      </div>
+      </PageReveal>
     </div>
   );
 }

@@ -5,9 +5,10 @@
 import Link from "next/link";
 import ProgressBar from "@/components/ui/ProgressBar";
 import ProgressStats from "@/components/ui/ProgressStats";
-import StreakBadge from "@/components/ui/StreakBadge";
 import StatusBadge from "@/components/ui/StatusBadge";
-import HoursDisplay from "@/components/ui/HoursDisplay";
+import StreakBadge from "@/components/ui/StreakBadge";
+import CornerBrackets from "@/components/ui/CornerBrackets";
+import DashboardShell from "@/components/dashboard/DashboardShell";
 import { supabase } from "@/lib/supabase";
 import { completionPercentage, todayISO } from "@/lib/utils";
 import { sumModuleHours, formatHours } from "@/lib/hours";
@@ -71,35 +72,22 @@ export default async function Dashboard() {
   }).length;
 
   return (
-    <div className="space-y-8">
-      {/* Header with streak */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-zinc-100">Dashboard</h2>
-          <p className="mt-1 text-sm sm:text-base text-zinc-400">Your 2026 progress at a glance.</p>
-        </div>
-        {globalStreak && (
-          <StreakBadge
-            current={globalStreak.current_streak}
-            longest={globalStreak.longest_streak}
-            label={`Best: ${globalStreak.longest_streak} days`}
-          />
-        )}
-      </div>
-
+    <DashboardShell streak={globalStreak}>
       {/* Overall progress */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-        <ProgressBar
-          label="Overall Progress"
-          percentage={overallPercentage}
-          color="#3b82f6"
-          size="lg"
-        />
-        <div className="mt-2 flex gap-4 text-xs font-mono text-zinc-500">
-          <span>{completedAll}/{totalAll} modules</span>
-          <span>{formatHours(totalHours)} logged</span>
+      <CornerBrackets color="#3b82f6">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+          <ProgressBar
+            label="Overall Progress"
+            percentage={overallPercentage}
+            color="#3b82f6"
+            size="lg"
+          />
+          <div className="mt-2 flex gap-4 text-xs font-mono text-zinc-500">
+            <span>{completedAll}/{totalAll} modules</span>
+            <span>{formatHours(totalHours)} logged</span>
+          </div>
         </div>
-      </div>
+      </CornerBrackets>
 
       {/* Per-domain cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -257,6 +245,6 @@ export default async function Dashboard() {
           </div>
         </div>
       )}
-    </div>
+    </DashboardShell>
   );
 }

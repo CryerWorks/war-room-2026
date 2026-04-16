@@ -44,6 +44,7 @@ export default function ModuleItem({
   children,
 }: ModuleItemProps) {
   const [editing, setEditing] = useState(false);
+  const [glitching, setGlitching] = useState(false);
   const [editTitle, setEditTitle] = useState(mod.title);
   const [editDescription, setEditDescription] = useState(mod.description);
   const [editStartTime, setEditStartTime] = useState(mod.start_time || "");
@@ -148,7 +149,11 @@ export default function ModuleItem({
       <div className="flex items-start gap-3">
         {/* Completion checkbox */}
         <button
-          onClick={() => onToggle(mod.id, mod.is_completed)}
+          onClick={() => {
+            setGlitching(true);
+            setTimeout(() => setGlitching(false), 300);
+            onToggle(mod.id, mod.is_completed);
+          }}
           className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
             mod.is_completed
               ? "bg-emerald-500 border-emerald-500 text-white scale-110"
@@ -203,7 +208,7 @@ export default function ModuleItem({
                 mod.is_completed
                   ? "line-through text-zinc-500"
                   : "text-zinc-100"
-              }`}
+              } ${glitching ? "glitch-once" : ""}`}
             >
               {mod.title}
             </span>

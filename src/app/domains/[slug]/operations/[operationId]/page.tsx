@@ -226,6 +226,9 @@ export default function OperationDetailPage({ params }: OperationDetailPageProps
         </div>
       </div>
 
+      {/* Schedule view — all modules across all phases, sorted chronologically */}
+      <OperationSchedule phases={sortedPhases} />
+
       {/* Two-column layout: timeline + phase detail */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Phase timeline */}
@@ -293,6 +296,175 @@ export default function OperationDetailPage({ params }: OperationDetailPageProps
               Select a phase from the timeline to view its modules.
             </div>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// OperationSchedule — chronological view of all modules across phases
+// Groups by date, shows phase context, completed vs upcoming.
+// Collapsible so it doesn't dominate the page.
+// ============================================================
+
+function OperationSchedule({
+  phases,
+}: {
+  phases: any[];
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  // Gather all modules from all phases with their phase context
+  const allModules = phases.flatMap((phase: any) =>
+    (phase.modules || []).map((mod: any) => ({
+      ...mod,
+      phaseTitle: phase.title,
+    }))
+  );
+
+  // Sort: dated modules first (by date, then start_time),
+  // undated modules last (in creation/sequence order).
+  const sorted = [...allModules].sort((a, b) => {
+    const aDate = a.scheduled_date || "";
+    const bDate = b.scheduled_date || "";
+
+    // Both undated — preserve original sequence (creation order)
+    if (!aDate && !bDate) return 0;
+    // Undated modules go to the end
+    if (!aDate) return 1;
+    if (!bDate) return -1;
+    // Both dated — sort by date, then time
+    const dateCompare = aDate.localeCompare(bDate);
+    if (dateCompare !== 0) return dateCompare;
+    return (a.start_time || "").localeCompare(b.start_time || "");
+  });
+
+  // Group by date — undated modules get their own "Sequenced" group
+  const grouped: Record<string, typeof sorted> = {};
+  for (const mod of sorted) {
+    const date = mod.scheduled_date || "sequenced";
+    if (!grouped[date]) grouped[date] = [];
+    grouped[date].push(mod);
+  }
+
+  // Put "sequenced" group at the end
+  const dates = Object.keys(grouped).sort((a, b) => {
+    if (a === "sequenced") return 1;
+    if (b === "sequenced") return -1;
+    return a.localeCompare(b);
+  });
+
+  const today = new Date().toISOString().split("T")[0];
+  const upcomingCount = sorted.filter(
+    (m) => !m.is_completed && (m.scheduled_date >= today || !m.scheduled_date)
+  ).length;
+
+  if (allModules.length === 0) return null;
+
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 overflow-hidden">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full px-5 py-3 flex items-center justify-between hover:bg-zinc-800/30 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <h3 className="text-sm font-mono uppercase tracking-wider text-zinc-400">
+            Schedule
+          </h3>
+          <span className="text-xs font-mono text-zinc-600">
+            {upcomingCount} upcoming · {sorted.length} total
+          </span>
+        </div>
+        <svg
+          className={`w-4 h-4 text-zinc-500 transition-transform ${expanded ? "rotate-180" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      <div className={`accordion ${expanded ? "open" : ""}`}>
+        <div>
+          <div className="border-t border-zinc-800 divide-y divide-zinc-800/50">
+            {dates.map((date) => {
+              const dayModules = grouped[date];
+              const isSequenced = date === "sequenced";
+              const isToday = !isSequenced && date === today;
+              const isPast = !isSequenced && date < today;
+
+              return (
+                <div key={date} className="px-5 py-3">
+                  {/* Date header */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <span
+                      className={`text-xs font-mono font-medium ${
+                        isSequenced
+                          ? "text-zinc-500"
+                          : isToday
+                            ? "text-blue-400"
+                            : isPast
+                              ? "text-zinc-600"
+                              : "text-zinc-400"
+                      }`}
+                    >
+                      {isSequenced
+                        ? "SEQUENCED (no date)"
+                        : isToday
+                          ? "TODAY"
+                          : formatDate(date)}
+                    </span>
+                    {isToday && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                    )}
+                  </div>
+
+                  {/* Modules for this date */}
+                  <div className="space-y-1.5 ml-2">
+                    {dayModules.map((mod: any) => (
+                      <div
+                        key={mod.id}
+                        className={`flex items-center gap-2 text-sm ${
+                          mod.is_completed ? "opacity-50" : ""
+                        }`}
+                      >
+                        {/* Status dot */}
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                            mod.is_completed ? "bg-emerald-500" : "bg-zinc-600"
+                          }`}
+                        />
+
+                        {/* Time */}
+                        {mod.start_time && (
+                          <span className="text-xs font-mono text-zinc-500 w-14 flex-shrink-0">
+                            {formatTime(mod.start_time)}
+                          </span>
+                        )}
+
+                        {/* Title + phase context */}
+                        <span
+                          className={`truncate ${
+                            mod.is_completed
+                              ? "line-through text-zinc-500"
+                              : "text-zinc-200"
+                          }`}
+                        >
+                          {mod.title}
+                        </span>
+                        <span className="text-[10px] font-mono text-zinc-600 flex-shrink-0">
+                          {mod.phaseTitle}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

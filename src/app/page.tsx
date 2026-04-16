@@ -29,7 +29,7 @@ async function getDashboardData() {
     supabase.from("user_stats").select("*").single(),
     supabase.from("domain_streaks").select("*, domain:domains(name, slug, color)"),
     supabase.from("goals").select("*, domain:domains(name, slug, color)").eq("status", "completed"),
-    supabase.from("operations").select("*, goal:goals(title, icon), phases(id)").eq("status", "active"),
+    supabase.from("operations").select("*, goal:goals(title, icon), domain:domains(slug), phases(id)").eq("status", "active"),
   ]);
 
   return {
@@ -181,12 +181,13 @@ export default async function Dashboard() {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {activeOperations.slice(0, 4).map((op: any) => (
-              <div
+              <Link
                 key={op.id}
-                className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4"
+                href={`/domains/${op.domain?.slug || "skill"}/operations/${op.id}`}
+                className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 hover:border-zinc-600 transition-all group"
               >
                 <div className="flex items-center justify-between mb-1">
-                  <h4 className="font-medium text-zinc-200 text-sm">
+                  <h4 className="font-medium text-zinc-200 text-sm group-hover:text-white transition-colors">
                     {op.title}
                   </h4>
                   <StatusBadge status={op.status} />
@@ -199,7 +200,7 @@ export default async function Dashboard() {
                 <p className="text-xs font-mono text-zinc-600 mt-1">
                   {op.phases?.length || 0} phases
                 </p>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

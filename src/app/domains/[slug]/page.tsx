@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback, use } from "react";
 import GoalCard from "@/components/goals/GoalCard";
 import GoalForm from "@/components/goals/GoalForm";
+import IngestModal from "@/components/ui/IngestModal";
 import StreakBadge from "@/components/ui/StreakBadge";
 import ProgressStats from "@/components/ui/ProgressStats";
 import { sumModuleHours } from "@/lib/hours";
@@ -23,6 +24,7 @@ export default function DomainDetailPage({ params }: DomainDetailPageProps) {
   const [streak, setStreak] = useState<DomainStreak | null>(null);
   const [activeTab, setActiveTab] = useState<"active" | "completed">("active");
   const [showGoalForm, setShowGoalForm] = useState(false);
+  const [showIngest, setShowIngest] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
@@ -212,14 +214,38 @@ export default function DomainDetailPage({ params }: DomainDetailPageProps) {
               />
             </div>
           ) : (
-            <button
-              onClick={() => setShowGoalForm(true)}
-              className="w-full py-3 rounded-xl border border-dashed border-zinc-700 text-zinc-400 text-sm hover:border-zinc-500 hover:text-zinc-300 transition-colors"
-            >
-              + New Goal
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowGoalForm(true)}
+                className="flex-1 py-3 rounded-xl border border-dashed border-zinc-700 text-zinc-400 text-sm hover:border-zinc-500 hover:text-zinc-300 transition-colors"
+              >
+                + New Goal
+              </button>
+              <button
+                onClick={() => setShowIngest(true)}
+                className="px-6 py-3 rounded-xl border border-dashed text-sm transition-colors hover:bg-zinc-800/50"
+                style={{
+                  borderColor: `${domain.color}40`,
+                  color: domain.color,
+                }}
+              >
+                AI Ingest
+              </button>
+            </div>
           )}
         </div>
+      )}
+
+      {/* AI Ingestion modal */}
+      {showIngest && domain && (
+        <IngestModal
+          domainId={domain.id}
+          domainSlug={domain.slug}
+          domainName={domain.name}
+          domainColor={domain.color}
+          onClose={() => setShowIngest(false)}
+          onComplete={refreshData}
+        />
       )}
     </div>
   );

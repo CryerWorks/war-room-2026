@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, use } from "react";
+import { useState, useEffect, useCallback, useRef, use } from "react";
 import Link from "next/link";
 import StepperTimeline from "@/components/ui/StepperTimeline";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -12,6 +12,7 @@ import ProgressStats from "@/components/ui/ProgressStats";
 import HoursDisplay from "@/components/ui/HoursDisplay";
 import PhaseForm from "@/components/phases/PhaseForm";
 import CompletionOverlay from "@/components/ui/CompletionOverlay";
+import ModuleItem from "@/components/modules/ModuleItem";
 import { sumModuleHours, formatHours } from "@/lib/hours";
 import { formatDate, formatTime } from "@/lib/utils";
 import type { CompletionEvent } from "@/types";
@@ -27,6 +28,16 @@ export default function OperationDetailPage({ params }: OperationDetailPageProps
   const [showPhaseForm, setShowPhaseForm] = useState(false);
   const [expandedPhase, setExpandedPhase] = useState<string | null>(null);
   const [completionEvents, setCompletionEvents] = useState<CompletionEvent[]>([]);
+  // Ref tracks current expanded phase — avoids stale closure in fetchOperation.
+  // Without this, re-fetching data after adding a module would reset your
+  // phase selection because the callback captured the old expandedPhase value.
+  const expandedPhaseRef = useRef<string | null>(null);
+
+  // Keep ref in sync with state
+  function setExpandedPhaseTracked(id: string | null) {
+    expandedPhaseRef.current = id;
+    setExpandedPhase(id);
+  }
 
   const fetchOperation = useCallback(async () => {
     try {
@@ -34,12 +45,14 @@ export default function OperationDetailPage({ params }: OperationDetailPageProps
       if (res.ok) {
         const data = await res.json();
         setOperation(data);
-        // Auto-expand the first active or pending phase
-        const activePhase = data.phases?.find(
-          (p: any) => p.status === "active" || p.status === "pending"
-        );
-        if (activePhase && !expandedPhase) {
-          setExpandedPhase(activePhase.id);
+        // Only auto-expand if nothing is currently selected
+        if (!expandedPhaseRef.current) {
+          const activePhase = data.phases?.find(
+            (p: any) => p.status === "active" || p.status === "pending"
+          );
+          if (activePhase) {
+            setExpandedPhaseTracked(activePhase.id);
+          }
         }
       }
     } catch {
@@ -80,7 +93,7 @@ export default function OperationDetailPage({ params }: OperationDetailPageProps
 
     // Completed phases and already-active phases just expand the detail
     if (phase.status === "completed" || phase.status === "active") {
-      setExpandedPhase(phaseId);
+      setExpandedPhaseTracked(phaseId);
       return;
     }
 
@@ -98,7 +111,7 @@ export default function OperationDetailPage({ params }: OperationDetailPageProps
     // Only allow activation if this IS the next sequential phase
     if (!nextActivatable || nextActivatable.id !== phaseId) {
       // Not the next in sequence — just expand to view, don't activate
-      setExpandedPhase(phaseId);
+      setExpandedPhaseTracked(phaseId);
       return;
     }
 
@@ -286,7 +299,7 @@ export default function OperationDetailPage({ params }: OperationDetailPageProps
                 // via the exiting class. We just wait for it, then delete.
                 setTimeout(async () => {
                   await fetch(`/api/phases/${phaseId}`, { method: "DELETE" });
-                  setExpandedPhase(null);
+                  setExpandedPhaseTracked(null);
                   fetchOperation();
                 }, 300);
               }}
@@ -612,61 +625,17 @@ function PhaseDetail({
           </div>
         ) : (
           modules.map((mod: any, index: number) => (
-            <div key={mod.id} className="px-5 py-3 flex items-center gap-3">
-              {/* Checkbox */}
-              <button
-                onClick={() => onToggleModule(mod.id, mod.is_completed)}
-                className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
-                  mod.is_completed
-                    ? "bg-emerald-500 border-emerald-500 text-white scale-110"
-                    : "border-zinc-600 hover:border-emerald-400 scale-100"
-                }`}
-              >
-                <svg
-                  className={`w-3 h-3 transition-all duration-200 ${
-                    mod.is_completed
-                      ? "opacity-100 scale-100"
-                      : "opacity-0 scale-50"
-                  }`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={3}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              </button>
-
-              {/* Module info with context tag */}
-              <div className="flex-1 min-w-0">
-                {/* Context breadcrumb: Operation → Phase → Module # */}
-                <span className="text-[10px] font-mono text-zinc-600 block mb-0.5" style={{ color: "#d6d5cc" }}>
-                  {operationTitle} → {phase.title} → M{String(index + 1).padStart(2, "0")}
-                </span>
-                <span
-                  className={`text-sm transition-all duration-200 ${
-                    mod.is_completed
-                      ? "line-through text-zinc-500"
-                      : "text-zinc-200"
-                  }`}
-                >
-                  {mod.title}
-                </span>
-              </div>
-
-              {/* Date and time */}
-              <div className="flex items-center gap-2 text-xs text-zinc-500 font-mono flex-shrink-0">
-                {mod.scheduled_date && (
-                  <span>{formatDate(mod.scheduled_date)}</span>
-                )}
-                {mod.start_time && (
-                  <span>
-                    {formatTime(mod.start_time)}
-                    {mod.end_time && `–${formatTime(mod.end_time)}`}
-                  </span>
-                )}
-              </div>
-            </div>
+            <ModuleItem
+              key={mod.id}
+              module={mod}
+              breadcrumb={`${operationTitle} → ${phase.title} → M${String(index + 1).padStart(2, "0")}`}
+              onToggle={onToggleModule}
+              onDelete={async (id: string) => {
+                await fetch(`/api/modules/${id}`, { method: "DELETE" });
+                onRefresh();
+              }}
+              onSaved={onRefresh}
+            />
           ))
         )}
       </div>

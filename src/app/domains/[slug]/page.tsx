@@ -120,7 +120,7 @@ export default function DomainDetailPage({ params }: DomainDetailPageProps) {
   return (
     <div className="space-y-6">
       {/* Domain header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-3 mb-1">
             <div

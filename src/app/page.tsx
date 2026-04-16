@@ -5,10 +5,10 @@
 import Link from "next/link";
 import ProgressBar from "@/components/ui/ProgressBar";
 import ProgressStats from "@/components/ui/ProgressStats";
-import StatusBadge from "@/components/ui/StatusBadge";
 import StreakBadge from "@/components/ui/StreakBadge";
 import CornerBrackets from "@/components/ui/CornerBrackets";
 import DashboardShell from "@/components/dashboard/DashboardShell";
+import ActiveOperations from "@/components/dashboard/ActiveOperations";
 import { supabase } from "@/lib/supabase";
 import { completionPercentage, todayISO } from "@/lib/utils";
 import { sumModuleHours, formatHours } from "@/lib/hours";
@@ -30,7 +30,7 @@ async function getDashboardData() {
     supabase.from("user_stats").select("*").single(),
     supabase.from("domain_streaks").select("*, domain:domains(name, slug, color)"),
     supabase.from("goals").select("*, domain:domains(name, slug, color)").eq("status", "completed"),
-    supabase.from("operations").select("*, goal:goals(title, icon), domain:domains(slug), phases(id)").eq("status", "active"),
+    supabase.from("operations").select("*, goal:goals(title, icon), domain:domains(slug, color), phases(id)").eq("status", "active"),
   ]);
 
   return {
@@ -161,38 +161,8 @@ export default async function Dashboard() {
         ))}
       </div>
 
-      {/* Active operations */}
-      {activeOperations.length > 0 && (
-        <div>
-          <h3 className="text-lg font-semibold text-zinc-100 mb-4">
-            Active Operations
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {activeOperations.slice(0, 4).map((op: any) => (
-              <Link
-                key={op.id}
-                href={`/domains/${op.domain?.slug || "skill"}/operations/${op.id}`}
-                className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 hover:border-zinc-600 transition-all group"
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <h4 className="font-medium text-zinc-200 text-sm group-hover:text-white transition-colors">
-                    {op.title}
-                  </h4>
-                  <StatusBadge status={op.status} />
-                </div>
-                {op.goal && (
-                  <p className="text-xs text-zinc-500">
-                    {op.goal.icon && `${op.goal.icon} `}{op.goal.title}
-                  </p>
-                )}
-                <p className="text-xs font-mono text-zinc-600 mt-1">
-                  {op.phases?.length || 0} phases
-                </p>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Active operations — grouped by goal, expandable */}
+      <ActiveOperations operations={activeOperations} />
 
       {/* Completed objectives */}
       {completedGoals.length > 0 && (

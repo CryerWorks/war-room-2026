@@ -229,14 +229,14 @@ export default function DomainDetailPage({ params }: DomainDetailPageProps) {
                   color: domain.color,
                 }}
               >
-                AI Ingest
+                AI Planner
               </button>
             </div>
           )}
         </div>
       )}
 
-      {/* AI Ingestion modal */}
+      {/* AI Plannerion modal */}
       {showIngest && domain && (
         <IngestModal
           domainId={domain.id}

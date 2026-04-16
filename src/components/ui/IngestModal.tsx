@@ -83,7 +83,7 @@ export default function IngestModal({
           <div>
             <h3 className="font-semibold text-zinc-100 flex items-center gap-2">
               <span className="font-mono text-xs uppercase tracking-wider" style={{ color: domainColor }}>
-                AI Ingestion
+                AI Planner
               </span>
             </h3>
             <p className="text-xs text-zinc-500 mt-0.5">

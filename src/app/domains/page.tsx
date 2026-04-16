@@ -6,6 +6,8 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import ProgressStats from "@/components/ui/ProgressStats";
 import StreakBadge from "@/components/ui/StreakBadge";
+import ScrambleHeading from "@/components/ui/ScrambleHeading";
+import PageReveal from "@/components/ui/PageReveal";
 import { sumModuleHours } from "@/lib/hours";
 import type { Domain } from "@/types";
 
@@ -35,13 +37,12 @@ export default async function DomainsPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-2xl font-bold text-zinc-100">Domains</h2>
-        <p className="mt-1 text-zinc-400">
-          Your three areas of development for 2026.
-        </p>
-      </div>
+      <ScrambleHeading
+        title="Domains"
+        subtitle="Your three areas of development for 2026."
+      />
 
+      <PageReveal delay={800}>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {domains.map((domain: Domain) => {
           const domainModules = modules.filter(
@@ -125,6 +126,7 @@ export default async function DomainsPage() {
           );
         })}
       </div>
+      </PageReveal>
     </div>
   );
 }

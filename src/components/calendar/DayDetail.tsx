@@ -130,10 +130,17 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
       {/* Module list */}
       <div className="divide-y divide-zinc-800">
         {loading ? (
-          <div className="px-6 py-8 text-center text-zinc-400">Loading...</div>
+          <div className="px-6 py-8 flex justify-center">
+            <div className="scan-loader w-32" />
+          </div>
         ) : modules.length === 0 ? (
-          <div className="px-6 py-8 text-center text-zinc-400 text-zinc-500">
-            No modules scheduled. Click &quot;+ Add Module&quot; to get started.
+          <div className="px-6 py-8 text-center">
+            <p className="text-zinc-600 mb-1">
+              <span className="redacted">██████ ████████</span>
+            </p>
+            <p className="text-xs font-mono text-zinc-500">
+              No modules scheduled. Click &quot;+ Add Module&quot; to get started.
+            </p>
           </div>
         ) : (
           modules.map((mod) => (

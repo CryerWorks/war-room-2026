@@ -5,7 +5,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import StatusBadge from "@/components/ui/StatusBadge";
 import ProgressStats from "@/components/ui/ProgressStats";
 import HoursDisplay from "@/components/ui/HoursDisplay";
@@ -22,6 +22,7 @@ interface GoalCardProps {
     icon: string | null;
     status: string;
     target_date: string | null;
+    theatre_id: string | null;
     domain_id: string;
     operations: Array<{
       id: string;
@@ -59,7 +60,19 @@ export default function GoalCard({ domainSlug, goal, color, onUpdated }: GoalCar
   const [editDescription, setEditDescription] = useState(goal.description);
   const [editIcon, setEditIcon] = useState(goal.icon || "");
   const [editTargetDate, setEditTargetDate] = useState(goal.target_date || "");
+  const [editTheatreId, setEditTheatreId] = useState(goal.theatre_id || "");
+  const [theatres, setTheatres] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
+
+  // Fetch theatres when editing starts
+  useEffect(() => {
+    if (!editing) return;
+    async function fetchTheatres() {
+      const res = await fetch("/api/theatres");
+      if (res.ok) setTheatres(await res.json());
+    }
+    fetchTheatres();
+  }, [editing]);
 
   // Compute progress
   const allModules = goal.operations.flatMap((op) =>
@@ -84,6 +97,7 @@ export default function GoalCard({ domainSlug, goal, color, onUpdated }: GoalCar
           description: editDescription.trim(),
           icon: editIcon.trim() || null,
           target_date: editTargetDate || null,
+          theatre_id: editTheatreId || null,
         }),
       });
       if (res.ok) {
@@ -191,6 +205,20 @@ export default function GoalCard({ domainSlug, goal, color, onUpdated }: GoalCar
                 onChange={(e) => setEditTargetDate(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               />
+              {theatres.length > 0 && (
+                <select
+                  value={editTheatreId}
+                  onChange={(e) => setEditTheatreId(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                >
+                  <option value="">— No theatre —</option>
+                  {theatres.map((t: any) => (
+                    <option key={t.id} value={t.id}>
+                      {t.icon ? `${t.icon} ` : ""}{t.name}
+                    </option>
+                  ))}
+                </select>
+              )}
               <div className="flex gap-2">
                 <button
                   onClick={handleSave}
@@ -206,6 +234,7 @@ export default function GoalCard({ domainSlug, goal, color, onUpdated }: GoalCar
                     setEditDescription(goal.description);
                     setEditIcon(goal.icon || "");
                     setEditTargetDate(goal.target_date || "");
+                    setEditTheatreId(goal.theatre_id || "");
                   }}
                   className="px-4 py-2 rounded-lg border border-zinc-700 text-zinc-400 text-sm hover:bg-zinc-800 transition-colors"
                 >

@@ -47,7 +47,7 @@ async function getDashboardData() {
     supabase.from("user_stats").select("*").single(),
     supabase.from("domain_streaks").select("*, domain:domains(name, slug, color)"),
     supabase.from("goals").select("*, domain:domains(name, slug, color)").eq("status", "completed"),
-    supabase.from("operations").select("*, goal:goals(title, icon), domain:domains(slug, color), phases(id, title, status, sort_order, modules:modules(id, title, is_completed))").eq("status", "active"),
+    supabase.from("operations").select("*, goal:goals(title, icon, theatre_id, theatre:theatres(id, name, icon, color)), domain:domains(slug, color), phases(id, title, status, sort_order, modules:modules(id, title, is_completed))").eq("status", "active"),
   ]);
 
   return {

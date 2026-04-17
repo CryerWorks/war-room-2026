@@ -45,6 +45,7 @@ export default function RootLayout({
                   <NavLink href="/">Dashboard</NavLink>
                   <NavLink href="/calendar">Calendar</NavLink>
                   <NavLink href="/domains">Domains</NavLink>
+                  <NavLink href="/theatres">Theatres</NavLink>
                 </nav>
               </div>
             </div>

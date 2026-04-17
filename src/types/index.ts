@@ -1,4 +1,21 @@
 // ============================================================
+// Theatre — cross-domain strategic supergroup
+// ============================================================
+export type TheatreStatus = "active" | "completed" | "archived";
+
+export interface Theatre {
+  id: string;
+  name: string;
+  description: string;
+  icon: string | null;
+  color: string;
+  status: TheatreStatus;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================================
 // Domain — the three goal areas (linguistic, skill, physical)
 // ============================================================
 export type DomainSlug = "linguistic" | "skill" | "physical";
@@ -20,6 +37,7 @@ export type GoalStatus = "active" | "completed" | "archived";
 export interface Goal {
   id: string;
   domain_id: string;
+  theatre_id: string | null;
   title: string;
   description: string;
   icon: string | null;

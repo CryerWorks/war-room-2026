@@ -80,7 +80,14 @@ Rules:
 
 ${preferences ? `Additional user preferences: ${preferences}` : ""}
 
-IMPORTANT: Respond with ONLY valid JSON matching this exact structure, no markdown code fences, no explanation:
+CRITICAL JSON RULES:
+- Respond with ONLY valid JSON. No markdown fences, no explanation, no comments.
+- All strings must use double quotes. Escape any double quotes inside strings with backslash.
+- No trailing commas after the last item in arrays or objects.
+- Keep descriptions concise (under 200 characters) to avoid escaping issues.
+- Use null (without quotes) for null values, not the string "null".
+
+The JSON must match this exact structure:
 
 {
   "goal": {
@@ -120,7 +127,7 @@ ${documentText}
 
   const message = await anthropic.messages.create({
     model: "claude-sonnet-4-6",
-    max_tokens: 4096,
+    max_tokens: 8192,
     messages: [
       {
         role: "user",
@@ -135,14 +142,8 @@ ${documentText}
     .map((block) => block.text)
     .join("");
 
-  // Parse the JSON — Claude should return clean JSON per our instructions
-  // Strip any markdown fences if present (defensive)
-  const cleaned = responseText
-    .replace(/^```json?\n?/m, "")
-    .replace(/\n?```$/m, "")
-    .trim();
-
-  const plan: IngestPlan = JSON.parse(cleaned);
+  // Attempt to parse with progressive cleaning
+  const plan = await parseJsonResponse(responseText);
 
   // Basic validation
   if (!plan.goal?.title || !Array.isArray(plan.operations)) {
@@ -150,4 +151,78 @@ ${documentText}
   }
 
   return plan;
+}
+
+/**
+ * Parse Claude's JSON response with progressive cleaning.
+ * If standard parse fails, applies fixes for common LLM JSON issues.
+ * As a last resort, asks Claude to fix its own broken JSON.
+ */
+async function parseJsonResponse(raw: string): Promise<IngestPlan> {
+  // Step 1: Strip markdown fences and surrounding whitespace
+  let cleaned = raw
+    .replace(/^```json?\s*/m, "")
+    .replace(/\s*```\s*$/m, "")
+    .trim();
+
+  // Step 2: Try parsing as-is
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    // Continue to cleaning
+  }
+
+  // Step 3: Fix common LLM JSON issues
+  cleaned = cleaned
+    // Remove trailing commas before } or ]
+    .replace(/,\s*([\]}])/g, "$1")
+    // Remove single-line comments
+    .replace(/\/\/.*$/gm, "")
+    // Remove multi-line comments
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    // Fix unquoted null/true/false that might have gotten quoted
+    .replace(/:\s*"null"/g, ": null")
+    .replace(/:\s*"true"/g, ": true")
+    .replace(/:\s*"false"/g, ": false");
+
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    // Continue to extraction
+  }
+
+  // Step 4: Try to extract JSON from surrounding text
+  // Claude sometimes wraps JSON in explanation text
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    const extracted = jsonMatch[0]
+      .replace(/,\s*([\]}])/g, "$1");
+    try {
+      return JSON.parse(extracted);
+    } catch {
+      // Continue to retry
+    }
+  }
+
+  // Step 5: Last resort — ask Claude to fix the broken JSON
+  const fixMessage = await anthropic.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 8192,
+    messages: [
+      {
+        role: "user",
+        content: `The following JSON is malformed. Fix it so it is valid JSON and return ONLY the fixed JSON, nothing else:\n\n${cleaned}`,
+      },
+    ],
+  });
+
+  const fixedText = fixMessage.content
+    .filter((block): block is Anthropic.TextBlock => block.type === "text")
+    .map((block) => block.text)
+    .join("")
+    .replace(/^```json?\s*/m, "")
+    .replace(/\s*```\s*$/m, "")
+    .trim();
+
+  return JSON.parse(fixedText);
 }

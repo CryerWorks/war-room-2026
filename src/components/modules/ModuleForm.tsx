@@ -29,6 +29,12 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
   const [endTime, setEndTime] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Recurrence state
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [pattern, setPattern] = useState("specific_days");
+  const [daysOfWeek, setDaysOfWeek] = useState<number[]>([1, 3, 5]); // MWF default
+  const [endDate, setEndDate] = useState("");
+
   // Cascading selector state
   const [showLinking, setShowLinking] = useState(false);
   const [goals, setGoals] = useState<any[]>([]);
@@ -94,28 +100,62 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
     setSelectedPhaseId("");
   }
 
+  function toggleDay(day: number) {
+    setDaysOfWeek((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort()
+    );
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim() || !domainId) return;
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/modules", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: title.trim(),
-          description: description.trim(),
-          domain_id: domainId,
-          operation_id: selectedOperationId || null,
-          phase_id: selectedPhaseId || null,
-          scheduled_date: date,
-          start_time: startTime || null,
-          end_time: endTime || null,
-        }),
-      });
+      if (isRecurring) {
+        // Create a recurrence rule — the generator will create module instances
+        const res = await fetch("/api/recurrence", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: title.trim(),
+            description: description.trim(),
+            domain_id: domainId,
+            operation_id: selectedOperationId || null,
+            phase_id: selectedPhaseId || null,
+            pattern,
+            days_of_week: pattern === "specific_days" ? daysOfWeek : [],
+            start_time: startTime || null,
+            end_time: endTime || null,
+            start_date: date,
+            end_date: endDate || null,
+          }),
+        });
 
-      if (res.ok) onCreated();
+        if (res.ok) {
+          // Trigger generation so modules appear immediately
+          await fetch("/api/recurrence/generate", { method: "POST" });
+          onCreated();
+        }
+      } else {
+        // Create a single module (existing behavior)
+        const res = await fetch("/api/modules", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: title.trim(),
+            description: description.trim(),
+            domain_id: domainId,
+            operation_id: selectedOperationId || null,
+            phase_id: selectedPhaseId || null,
+            scheduled_date: date,
+            start_time: startTime || null,
+            end_time: endTime || null,
+          }),
+        });
+
+        if (res.ok) onCreated();
+      }
     } finally {
       setSubmitting(false);
     }
@@ -312,13 +352,107 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
         />
       </div>
 
+      {/* Recurring toggle */}
+      <div>
+        <label className="flex items-center gap-2.5 cursor-pointer group">
+          <button
+            type="button"
+            onClick={() => setIsRecurring(!isRecurring)}
+            className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
+              isRecurring
+                ? "bg-blue-500 border-blue-500 text-white"
+                : "border-zinc-600 group-hover:border-blue-400"
+            }`}
+          >
+            {isRecurring && (
+              <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+          </button>
+          <span className="text-sm text-zinc-300">Recurring module</span>
+        </label>
+
+        {/* Recurrence options — accordion unfold */}
+        <div className={`accordion ${isRecurring ? "open" : ""}`}>
+          <div>
+            <div className="mt-3 space-y-3 pl-6 border-l-2 border-zinc-800">
+              {/* Pattern */}
+              <div>
+                <label className="block text-xs font-mono uppercase tracking-wider text-zinc-600 mb-1">
+                  Repeat Pattern
+                </label>
+                <div className="flex gap-2">
+                  {[
+                    { value: "daily", label: "Daily" },
+                    { value: "weekly", label: "Weekly" },
+                    { value: "specific_days", label: "Specific Days" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setPattern(opt.value)}
+                      className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
+                        pattern === opt.value
+                          ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                          : "border-zinc-700 text-zinc-500 hover:bg-zinc-800"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Day picker — only for specific_days */}
+              {pattern === "specific_days" && (
+                <div>
+                  <label className="block text-xs font-mono uppercase tracking-wider text-zinc-600 mb-1">
+                    Days of Week
+                  </label>
+                  <div className="flex gap-1">
+                    {["S", "M", "T", "W", "T", "F", "S"].map((label, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => toggleDay(idx)}
+                        className={`w-8 h-8 rounded text-xs font-mono font-medium transition-colors border ${
+                          daysOfWeek.includes(idx)
+                            ? "border-blue-500 bg-blue-500/20 text-blue-400"
+                            : "border-zinc-700 text-zinc-600 hover:bg-zinc-800"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* End date */}
+              <div>
+                <label className="block text-xs font-mono uppercase tracking-wider text-zinc-600 mb-1">
+                  End Date (optional — leave empty for indefinite)
+                </label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Submit */}
       <button
         type="submit"
         disabled={submitting || !title.trim()}
         className="w-full py-2 rounded-lg bg-blue-500 text-white font-medium text-sm hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        {submitting ? "Creating..." : "Create Module"}
+        {submitting ? (isRecurring ? "Creating schedule..." : "Creating...") : (isRecurring ? "Create Recurring Module" : "Create Module")}
       </button>
     </form>
   );

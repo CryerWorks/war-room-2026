@@ -6,6 +6,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import IconPicker from "@/components/ui/IconPicker";
 
 interface GoalFormProps {
   domainId: string;
@@ -59,19 +60,12 @@ export default function GoalForm({ domainId, onCreated, onCancel }: GoalFormProp
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="flex gap-3">
-        {/* Icon input — small, for a single emoji */}
+        {/* Icon picker — replaces the old emoji text input */}
         <div className="flex-shrink-0">
           <label className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
             Icon
           </label>
-          <input
-            type="text"
-            value={icon}
-            onChange={(e) => setIcon(e.target.value)}
-            placeholder="🎯"
-            maxLength={2}
-            className="w-12 h-10 text-center text-lg rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-          />
+          <IconPicker value={icon} onChange={setIcon} />
         </div>
 
         {/* Title */}

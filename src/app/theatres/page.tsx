@@ -8,6 +8,8 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import ScrambleText from "@/components/ui/ScrambleText";
 import PageReveal from "@/components/ui/PageReveal";
+import TacticalIcon from "@/components/ui/TacticalIcon";
+import IconPicker from "@/components/ui/IconPicker";
 import ProgressStats from "@/components/ui/ProgressStats";
 import StatusBadge from "@/components/ui/StatusBadge";
 
@@ -144,7 +146,7 @@ export default function TheatresPage() {
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        {theatre.icon && <span className="text-2xl">{theatre.icon}</span>}
+                        {theatre.icon && <TacticalIcon name={theatre.icon} size={24} className="text-zinc-300" />}
                         <div>
                           <div className="flex items-center gap-2">
                             <h3 className="font-semibold text-zinc-100">{theatre.name}</h3>
@@ -198,7 +200,7 @@ export default function TheatresPage() {
                                 className="w-2 h-2 rounded-full flex-shrink-0"
                                 style={{ backgroundColor: goal.domain?.color || "#6366f1" }}
                               />
-                              {goal.icon && <span className="text-sm">{goal.icon}</span>}
+                              {goal.icon && <TacticalIcon name={goal.icon} size={16} className="text-zinc-400" />}
                               <span className="text-sm text-zinc-300 group-hover:text-zinc-100 transition-colors">
                                 {goal.title}
                               </span>
@@ -233,14 +235,7 @@ export default function TheatresPage() {
                       <label className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
                         Icon
                       </label>
-                      <input
-                        type="text"
-                        value={newIcon}
-                        onChange={(e) => setNewIcon(e.target.value)}
-                        placeholder="⚔"
-                        maxLength={2}
-                        className="w-12 h-10 text-center text-lg rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                      />
+                      <IconPicker value={newIcon} onChange={setNewIcon} />
                     </div>
                     <div className="flex-1">
                       <label className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">

@@ -22,6 +22,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import ProgressStats from "@/components/ui/ProgressStats";
 import CollapsibleSection from "@/components/ui/CollapsibleSection";
+import TacticalIcon from "@/components/ui/TacticalIcon";
 
 interface Module {
   id: string;
@@ -198,7 +199,7 @@ export default function SituationReport({
               {/* Theatre header — only for theatre groups */}
               {group.type === "theatre" && (
                 <div className="flex items-center gap-2 mb-2">
-                  {group.icon && <span className="text-sm">{group.icon}</span>}
+                  {group.icon && <TacticalIcon name={group.icon} size={16} className="text-zinc-400" />}
                   <span
                     className="text-xs font-mono uppercase tracking-[0.15em] font-medium"
                     style={{ color: group.color || "#8b5cf6" }}
@@ -233,7 +234,7 @@ export default function SituationReport({
                     className="w-full px-5 py-3 flex items-center justify-between hover:bg-zinc-800/20 transition-colors"
                   >
                     <div className="flex items-center gap-2.5">
-                      {goal.icon && <span className="text-lg">{goal.icon}</span>}
+                      {goal.icon && <TacticalIcon name={goal.icon} size={20} className="text-zinc-300" />}
                       <h4 className="font-semibold text-zinc-100 text-sm">
                         {goal.title}
                       </h4>
@@ -452,7 +453,7 @@ export default function SituationReport({
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">
                         <div className="flex items-center gap-2">
-                          {goal.icon && <span className="text-xl">{goal.icon}</span>}
+                          {goal.icon && <TacticalIcon name={goal.icon} size={20} className="text-zinc-300" />}
                           <h4 className="font-medium text-zinc-100">{goal.title}</h4>
                         </div>
                         <span

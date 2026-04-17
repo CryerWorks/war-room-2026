@@ -22,6 +22,7 @@
 
 import { useState } from "react";
 import { formatTime } from "@/lib/utils";
+import TacticalIcon from "@/components/ui/TacticalIcon";
 import { useRouter } from "next/navigation";
 import type { Domain } from "@/types";
 
@@ -192,8 +193,8 @@ export default function TodayFocus({ modules: initialModules, domains }: TodayFo
                     <div className="flex-1 min-w-0">
                       {/* Hierarchy breadcrumb */}
                       {mod.operation && (
-                        <span className="text-[10px] font-mono block mb-0.5" style={{ color: "#f59e0b" }}>
-                          {mod.operation.goal?.icon && `${mod.operation.goal.icon} `}
+                        <span className="text-[10px] font-mono mb-0.5 flex items-center gap-1" style={{ color: "#f59e0b" }}>
+                          {mod.operation.goal?.icon && <TacticalIcon name={mod.operation.goal.icon} size={11} />}
                           {mod.operation.goal?.title && `${mod.operation.goal.title} → `}
                           {mod.operation.title}
                           {mod.phase && ` → ${mod.phase.title}`}

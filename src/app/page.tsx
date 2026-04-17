@@ -3,12 +3,13 @@
 // This is a server component — all data is fetched server-side for fast initial load.
 
 import Link from "next/link";
-import ProgressBar from "@/components/ui/ProgressBar";
 import ProgressStats from "@/components/ui/ProgressStats";
 import StreakBadge from "@/components/ui/StreakBadge";
 import CornerBrackets from "@/components/ui/CornerBrackets";
 import DashboardShell from "@/components/dashboard/DashboardShell";
-import ActiveOperations from "@/components/dashboard/ActiveOperations";
+import TodayFocus from "@/components/dashboard/TodayFocus";
+import SituationReport from "@/components/dashboard/SituationReport";
+import FocusSection from "@/components/ui/FocusSection";
 import { supabase } from "@/lib/supabase";
 import { completionPercentage, todayISO } from "@/lib/utils";
 import { sumModuleHours, formatHours } from "@/lib/hours";
@@ -17,25 +18,36 @@ import type { Domain } from "@/types";
 export const dynamic = "force-dynamic";
 
 async function getDashboardData() {
+  const today = todayISO();
+
   const [
     domainsResult,
     modulesResult,
+    todayModulesResult,
     globalStreakResult,
     domainStreaksResult,
     goalsResult,
     operationsResult,
   ] = await Promise.all([
     supabase.from("domains").select("*").order("name"),
+    // Lean query for aggregate stats (all modules, minimal fields)
     supabase.from("modules").select("domain_id, is_completed, scheduled_date, start_time, end_time"),
+    // Rich query for today's modules only (full detail for the focus view)
+    supabase
+      .from("modules")
+      .select("*, domain:domains(*), operation:operations(title, goal:goals(title, icon)), phase:phases(title)")
+      .eq("scheduled_date", today)
+      .order("start_time", { nullsFirst: false }),
     supabase.from("user_stats").select("*").single(),
     supabase.from("domain_streaks").select("*, domain:domains(name, slug, color)"),
     supabase.from("goals").select("*, domain:domains(name, slug, color)").eq("status", "completed"),
-    supabase.from("operations").select("*, goal:goals(title, icon), domain:domains(slug, color), phases(id)").eq("status", "active"),
+    supabase.from("operations").select("*, goal:goals(title, icon), domain:domains(slug, color), phases(id, title, status, sort_order, modules:modules(id, title, is_completed))").eq("status", "active"),
   ]);
 
   return {
     domains: domainsResult.data || [],
     modules: modulesResult.data || [],
+    todayModules: todayModulesResult.data || [],
     globalStreak: globalStreakResult.data,
     domainStreaks: domainStreaksResult.data || [],
     completedGoals: goalsResult.data || [],
@@ -47,6 +59,7 @@ export default async function Dashboard() {
   const {
     domains,
     modules,
+    todayModules,
     globalStreak,
     domainStreaks,
     completedGoals,
@@ -73,148 +86,128 @@ export default async function Dashboard() {
 
   return (
     <DashboardShell streak={globalStreak}>
-      {/* Overall progress */}
-      <CornerBrackets color="#3b82f6">
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-          <ProgressBar
-            label="Overall Progress"
-            percentage={overallPercentage}
-            color="#3b82f6"
-            size="lg"
-          />
-          <div className="mt-2 flex gap-4 text-xs font-mono text-zinc-500">
-            <span>{completedAll}/{totalAll} modules</span>
-            <span>{formatHours(totalHours)} logged</span>
-          </div>
-        </div>
-      </CornerBrackets>
+      {/* ============================================================
+          LAYER 1: ACTION — What do I need to do right now?
+          This is the most prominent section. Full width, no competition.
+          ============================================================ */}
+      <FocusSection>
+        <TodayFocus modules={todayModules} domains={domains} />
+      </FocusSection>
 
-      {/* Per-domain cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {domains.map((domain: Domain) => {
-          const domainModules = modules.filter((m) => m.domain_id === domain.id);
-          const completed = domainModules.filter((m) => m.is_completed).length;
-          const total = domainModules.length;
-          const hours = sumModuleHours(domainModules);
-          const streak = domainStreaks.find((s) => s.domain_id === domain.id);
-
-          return (
-            <Link
-              key={domain.id}
-              href={`/domains/${domain.slug}`}
-              className="group rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 hover:border-zinc-600 transition-all"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: domain.color }}
-                  />
-                  <h3 className="text-lg font-semibold text-zinc-100">
-                    {domain.name}
-                  </h3>
-                </div>
-                {streak && streak.current_streak > 0 && (
-                  <StreakBadge
-                    current={streak.current_streak}
-                    longest={streak.longest_streak}
-                    color={domain.color}
-                  />
-                )}
+      {/* ============================================================
+          LAYER 2: GLANCE — How am I doing? Quick stats strip.
+          Compact horizontal row — four numbers at a glance.
+          Replaces the old large progress bar + separate stats grid
+          with a single dense strip. The overall % is just one of four
+          metrics now, not a hero element.
+          ============================================================ */}
+      <FocusSection>
+        <CornerBrackets color="#3b82f6">
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-5 py-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              <div>
+                <p className="text-2xl font-bold font-mono text-zinc-100">
+                  {overallPercentage}%
+                </p>
+                <p className="text-xs text-zinc-500">Completion</p>
               </div>
-
-              <p className="text-sm text-zinc-500 mb-4">{domain.description}</p>
-
-              <ProgressStats
-                completed={completed}
-                total={total}
-                hours={hours}
-                label="modules"
-                color={domain.color}
+              <div>
+                <p className="text-2xl font-bold font-mono text-zinc-100">
+                  {completedToday}
+                </p>
+                <p className="text-xs text-zinc-500">Done Today</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold font-mono text-zinc-100">
+                  {formatHours(totalHours)}
+                </p>
+                <p className="text-xs text-zinc-500">Total Hours</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold font-mono text-zinc-100">
+                  {upcomingThisWeek}
+                </p>
+                <p className="text-xs text-zinc-500">This Week</p>
+              </div>
+            </div>
+            {/* Thin overall progress bar beneath the stats */}
+            <div className="mt-3 w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${overallPercentage}%`, backgroundColor: "#3b82f6" }}
               />
-
-              <div className="mt-3 text-xs text-zinc-600 group-hover:text-zinc-400 transition-colors">
-                View domain →
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* Quick stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: "Completed Today", value: String(completedToday) },
-          { label: "Upcoming This Week", value: String(upcomingThisWeek) },
-          { label: "Total Hours", value: formatHours(totalHours) },
-          { label: "Completion Rate", value: `${overallPercentage}%` },
-        ].map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 text-center"
-          >
-            <p className="text-2xl font-bold font-mono text-zinc-100">
-              {stat.value}
-            </p>
-            <p className="text-sm text-zinc-500">{stat.label}</p>
+            </div>
           </div>
-        ))}
-      </div>
+        </CornerBrackets>
+      </FocusSection>
 
-      {/* Active operations — grouped by goal, expandable */}
-      <ActiveOperations operations={activeOperations} />
+      {/* ============================================================
+          LAYER 3: SCAN — Domain breakdown. Where am I across areas?
+          Three cards side by side, each clickable to drill in.
+          ============================================================ */}
+      <FocusSection>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {domains.map((domain: Domain) => {
+            const domainModules = modules.filter((m) => m.domain_id === domain.id);
+            const completed = domainModules.filter((m) => m.is_completed).length;
+            const total = domainModules.length;
+            const hours = sumModuleHours(domainModules);
+            const streak = domainStreaks.find((s) => s.domain_id === domain.id);
 
-      {/* Completed objectives */}
-      {completedGoals.length > 0 && (
-        <div>
-          <h3 className="text-lg font-semibold text-zinc-100 mb-4">
-            Completed Objectives
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {completedGoals.map((goal: any) => {
-              const domainColor = goal.domain?.color || "#6366f1";
-              return (
-                <div
-                  key={goal.id}
-                  className="relative rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 overflow-hidden"
-                  style={{ borderLeftWidth: "3px", borderLeftColor: domainColor }}
-                >
-                  {/* Goal info + accomplished badge */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">
-                    <div className="flex items-center gap-2">
-                      {goal.icon && <span className="text-xl">{goal.icon}</span>}
-                      <h4 className="font-medium text-zinc-100">{goal.title}</h4>
-                    </div>
-                    <span
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-[0.15em] border flex-shrink-0"
-                      style={{
-                        color: domainColor,
-                        borderColor: `${domainColor}40`,
-                        backgroundColor: `${domainColor}10`,
-                      }}
-                    >
-                      <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                      Accomplished
-                    </span>
+            return (
+              <Link
+                key={domain.id}
+                href={`/domains/${domain.slug}`}
+                className="group rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 hover:border-zinc-600 transition-all"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{ backgroundColor: domain.color }}
+                    />
+                    <h3 className="text-base font-semibold text-zinc-100">
+                      {domain.name}
+                    </h3>
                   </div>
-
-                  {/* Domain + date */}
-                  <div className="flex items-center gap-3 text-xs font-mono text-zinc-500">
-                    <span style={{ color: domainColor }}>{goal.domain?.name}</span>
-                    {goal.completed_at && (
-                      <span>
-                        {new Date(goal.completed_at).toLocaleDateString()}
-                      </span>
-                    )}
-                  </div>
+                  {streak && streak.current_streak > 0 && (
+                    <StreakBadge
+                      current={streak.current_streak}
+                      longest={streak.longest_streak}
+                      color={domain.color}
+                    />
+                  )}
                 </div>
-              );
-            })}
-          </div>
+
+                <ProgressStats
+                  completed={completed}
+                  total={total}
+                  hours={hours}
+                  label="modules"
+                  color={domain.color}
+                />
+
+                <div className="mt-2.5 text-xs text-zinc-600 group-hover:text-zinc-400 transition-colors">
+                  View domain →
+                </div>
+              </Link>
+            );
+          })}
         </div>
-      )}
+      </FocusSection>
+
+      {/* ============================================================
+          LAYER 4: SITUATION REPORT — Strategic overview.
+          Goals first (the objectives), operations nested underneath.
+          Correct hierarchy: Goal > Operation, not the reverse.
+          Includes completed objectives in a separate collapsible.
+          ============================================================ */}
+      <FocusSection>
+        <SituationReport
+          activeOperations={activeOperations}
+          completedGoals={completedGoals}
+        />
+      </FocusSection>
     </DashboardShell>
   );
 }

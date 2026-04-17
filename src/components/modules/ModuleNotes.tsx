@@ -51,7 +51,7 @@ export default function ModuleNotes({ moduleId, notes, onNotesChanged }: ModuleN
               key={note.id}
               className="flex items-start justify-between gap-2 p-2 rounded-lg bg-zinc-800"
             >
-              <p className="text-sm text-zinc-300 whitespace-pre-wrap">
+              <p className="text-sm text-zinc-300 whitespace-pre-wrap break-words min-w-0">
                 {note.content}
               </p>
               <button

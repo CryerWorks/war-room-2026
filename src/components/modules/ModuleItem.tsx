@@ -258,8 +258,14 @@ export default function ModuleItem({
                 Delete
               </button>
             )}
-            {children}
           </div>
+          {/* Children (notes panel etc.) rendered below action buttons,
+              not inside the flex row — prevents horizontal overflow */}
+          {children && (
+            <div className="mt-2 overflow-hidden">
+              {children}
+            </div>
+          )}
         </div>
       </div>
     </div>

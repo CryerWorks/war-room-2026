@@ -13,11 +13,17 @@ import FocusSection from "@/components/ui/FocusSection";
 import { supabase } from "@/lib/supabase";
 import { completionPercentage, todayISO } from "@/lib/utils";
 import { sumModuleHours, formatHours } from "@/lib/hours";
+import { generateRecurringModules } from "@/lib/recurrence";
 import type { Domain } from "@/types";
 
 export const dynamic = "force-dynamic";
 
 async function getDashboardData() {
+  // Generate any pending recurring modules before fetching data.
+  // This runs server-side on every dashboard load. It's idempotent —
+  // calling it multiple times won't create duplicates because the
+  // generator checks existing modules before inserting.
+  await generateRecurringModules();
   const today = todayISO();
 
   const [

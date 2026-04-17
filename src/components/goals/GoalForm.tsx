@@ -5,7 +5,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface GoalFormProps {
   domainId: string;
@@ -18,7 +18,18 @@ export default function GoalForm({ domainId, onCreated, onCancel }: GoalFormProp
   const [description, setDescription] = useState("");
   const [icon, setIcon] = useState("");
   const [targetDate, setTargetDate] = useState("");
+  const [theatreId, setTheatreId] = useState("");
+  const [theatres, setTheatres] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
+
+  // Fetch available theatres for the selector
+  useEffect(() => {
+    async function fetchTheatres() {
+      const res = await fetch("/api/theatres");
+      if (res.ok) setTheatres(await res.json());
+    }
+    fetchTheatres();
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -35,6 +46,7 @@ export default function GoalForm({ domainId, onCreated, onCancel }: GoalFormProp
           description: description.trim(),
           icon: icon.trim() || null,
           target_date: targetDate || null,
+          theatre_id: theatreId || null,
         }),
       });
 
@@ -104,6 +116,27 @@ export default function GoalForm({ domainId, onCreated, onCancel }: GoalFormProp
           className="w-full px-3 py-2 rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
         />
       </div>
+
+      {/* Theatre selector (optional) */}
+      {theatres.length > 0 && (
+        <div>
+          <label className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
+            Theatre (optional)
+          </label>
+          <select
+            value={theatreId}
+            onChange={(e) => setTheatreId(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+          >
+            <option value="">— No theatre —</option>
+            {theatres.map((t: any) => (
+              <option key={t.id} value={t.id}>
+                {t.icon ? `${t.icon} ` : ""}{t.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex gap-2">

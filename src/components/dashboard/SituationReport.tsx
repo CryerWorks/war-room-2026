@@ -37,12 +37,19 @@ interface Phase {
   modules?: Module[] | null;
 }
 
+interface Theatre {
+  id: string;
+  name: string;
+  icon?: string | null;
+  color?: string;
+}
+
 interface Operation {
   id: string;
   title: string;
   status: string;
   domain?: { slug: string; color?: string } | null;
-  goal?: { title: string; icon?: string } | null;
+  goal?: { title: string; icon?: string; theatre_id?: string | null; theatre?: Theatre | null } | null;
   phases?: Phase[] | null;
 }
 
@@ -85,29 +92,75 @@ export default function SituationReport({
   // Nothing to show
   if (activeOperations.length === 0 && completedGoals.length === 0) return null;
 
-  // Group operations by goal — goals become the primary level
+  // Group: Theatre → Goal → Operations
+  // First, group operations by goal (same as before)
   const goalMap: Record<string, {
     title: string;
     icon: string;
+    theatreId: string | null;
+    theatreName: string;
+    theatreIcon: string;
+    theatreColor: string;
     operations: Operation[];
   }> = {};
 
   for (const op of activeOperations) {
     const goalKey = op.goal?.title || "Ungrouped";
     if (!goalMap[goalKey]) {
+      const theatre = op.goal?.theatre;
       goalMap[goalKey] = {
         title: op.goal?.title || "Standalone Operations",
         icon: op.goal?.icon || "",
+        theatreId: theatre?.id || null,
+        theatreName: theatre?.name || "",
+        theatreIcon: theatre?.icon || "",
+        theatreColor: theatre?.color || "",
         operations: [],
       };
     }
     goalMap[goalKey].operations.push(op);
   }
 
-  const activeGoals = Object.values(goalMap);
+  const allGoals = Object.values(goalMap);
+
+  // Group goals by theatre
+  const theatreMap: Record<string, {
+    name: string;
+    icon: string;
+    color: string;
+    goals: typeof allGoals;
+  }> = {};
+
+  const untheatredGoals: typeof allGoals = [];
+
+  for (const goal of allGoals) {
+    if (goal.theatreId && goal.theatreName) {
+      if (!theatreMap[goal.theatreId]) {
+        theatreMap[goal.theatreId] = {
+          name: goal.theatreName,
+          icon: goal.theatreIcon,
+          color: goal.theatreColor,
+          goals: [],
+        };
+      }
+      theatreMap[goal.theatreId].goals.push(goal);
+    } else {
+      untheatredGoals.push(goal);
+    }
+  }
+
+  const theatreGroups = Object.values(theatreMap);
+  // Combine: theatred goals first, then untheatred
+  const displayGroups = [
+    ...theatreGroups.map((t) => ({ type: "theatre" as const, ...t })),
+    ...(untheatredGoals.length > 0
+      ? [{ type: "standalone" as const, name: "", icon: "", color: "", goals: untheatredGoals }]
+      : []),
+  ];
+
+  const totalGoals = allGoals.length;
   const showLimit = 3;
-  const needsExpand = activeGoals.length > showLimit;
-  const visibleGoals = showAllGoals ? activeGoals : activeGoals.slice(0, showLimit);
+  const needsExpand = totalGoals > showLimit;
 
   return (
     <div className="space-y-3">
@@ -137,11 +190,27 @@ export default function SituationReport({
           revealed ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
         }`}
       >
-      {/* Active goals with their operations */}
-      {revealed && activeGoals.length > 0 && (
-        <div className="stagger-in space-y-3">
-          <div className="space-y-3">
-            {visibleGoals.map((goal) => {
+      {/* Goals grouped by theatre */}
+      {revealed && allGoals.length > 0 && (
+        <div className="stagger-in space-y-4">
+          {displayGroups.map((group, groupIdx) => (
+            <div key={group.name || "standalone"}>
+              {/* Theatre header — only for theatre groups */}
+              {group.type === "theatre" && (
+                <div className="flex items-center gap-2 mb-2">
+                  {group.icon && <span className="text-sm">{group.icon}</span>}
+                  <span
+                    className="text-xs font-mono uppercase tracking-[0.15em] font-medium"
+                    style={{ color: group.color || "#8b5cf6" }}
+                  >
+                    {group.name}
+                  </span>
+                  <div className="flex-1 h-px" style={{ backgroundColor: `${group.color || "#8b5cf6"}20` }} />
+                </div>
+              )}
+
+              <div className="space-y-3">
+            {group.goals.map((goal) => {
               const isGoalExpanded = expandedGoals.has(goal.title);
               return (
                 <div
@@ -353,6 +422,10 @@ export default function SituationReport({
               );
             })}
 
+              </div>
+            </div>
+          ))}
+
             {/* Expand/collapse for goals */}
             {needsExpand && (
               <button
@@ -361,10 +434,9 @@ export default function SituationReport({
               >
                 {showAllGoals
                   ? "Show less"
-                  : `Show all ${activeGoals.length} goals`}
+                  : `Show all ${totalGoals} goals`}
               </button>
             )}
-          </div>
 
           {/* Completed objectives — nested inside the reveal */}
           {completedGoals.length > 0 && (

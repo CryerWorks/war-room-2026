@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 // POST /api/goals — create a new goal
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { domain_id, title, description, icon, target_date } = body;
+  const { domain_id, title, description, icon, target_date, theatre_id } = body;
 
   if (!domain_id || !title) {
     return NextResponse.json(
@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
       description: description || "",
       icon: icon || null,
       target_date: target_date || null,
+      theatre_id: theatre_id || null,
     })
     .select("*, domain:domains(*)")
     .single();

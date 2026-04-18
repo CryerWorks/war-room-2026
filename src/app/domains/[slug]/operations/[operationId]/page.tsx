@@ -541,7 +541,7 @@ function DependencyManager({
   }
 
   return (
-    <div className="mt-1">
+    <span className="inline-flex items-center flex-wrap gap-1">
       {/* Existing dependencies */}
       {dependencies.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-1.5">
@@ -573,17 +573,18 @@ function DependencyManager({
 
       {/* Add dependency button/picker */}
       {showPicker ? (
-        <div className="space-y-1.5">
+        <span className="inline-flex items-center gap-1.5">
           {pickable.length === 0 ? (
-            <p className="text-[10px] text-zinc-600">No other modules available</p>
+            <span className="text-[10px] text-zinc-600">No modules available</span>
           ) : (
             <select
               onChange={(e) => {
                 if (e.target.value) addDependency(e.target.value);
               }}
               disabled={adding}
-              className="w-full px-2 py-1 rounded border border-zinc-700 bg-zinc-900 text-zinc-300 text-xs focus:ring-1 focus:ring-blue-500 outline-none"
+              className="px-2 py-0.5 rounded border border-zinc-700 bg-zinc-900 text-zinc-300 text-[10px] focus:ring-1 focus:ring-blue-500 outline-none"
               defaultValue=""
+              autoFocus
             >
               <option value="" disabled>Select prerequisite...</option>
               {pickable.map((m) => (
@@ -591,14 +592,14 @@ function DependencyManager({
               ))}
             </select>
           )}
-          {error && <p className="text-[10px] text-red-400">{error}</p>}
+          {error && <span className="text-[10px] text-red-400">{error}</span>}
           <button
             onClick={() => { setShowPicker(false); setError(""); }}
             className="text-[10px] text-zinc-500 hover:text-zinc-300"
           >
-            Cancel
+            ×
           </button>
-        </div>
+        </span>
       ) : (
         <button
           onClick={() => setShowPicker(true)}
@@ -607,7 +608,7 @@ function DependencyManager({
           + Add dependency
         </button>
       )}
-    </div>
+    </span>
   );
 }
 

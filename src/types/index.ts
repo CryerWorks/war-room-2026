@@ -115,6 +115,24 @@ export interface ModuleDependency {
 }
 
 // ============================================================
+// Tag — cross-cutting label for modules
+// ============================================================
+export interface Tag {
+  id: string;
+  name: string;
+  color: string;
+  created_at: string;
+}
+
+export interface ModuleTag {
+  id: string;
+  module_id: string;
+  tag_id: string;
+  tag?: Tag;
+  created_at: string;
+}
+
+// ============================================================
 // ModuleNote — notes attached to a module
 // ============================================================
 export interface ModuleNote {

@@ -9,6 +9,7 @@
 import { useState } from "react";
 import { formatTime } from "@/lib/utils";
 import TacticalIcon from "@/components/ui/TacticalIcon";
+import TagSelector from "@/components/modules/TagSelector";
 
 interface ModuleItemProps {
   module: {
@@ -26,6 +27,11 @@ interface ModuleItemProps {
       id: string;
       depends_on_id: string;
       depends_on?: { id: string; title: string; is_completed: boolean } | null;
+    }> | null;
+    tags?: Array<{
+      id: string;
+      tag_id: string;
+      tag?: { id: string; name: string; color: string } | null;
     }> | null;
   };
   // Optional context breadcrumb (used in PhaseDetail)
@@ -294,13 +300,16 @@ export default function ModuleItem({
               </button>
             )}
           </div>
-          {/* Children (notes panel etc.) rendered below action buttons,
-              not inside the flex row — prevents horizontal overflow */}
-          {children && (
-            <div className="mt-2 overflow-hidden">
-              {children}
-            </div>
-          )}
+
+          {/* Tags + children (dependencies, notes) on same line */}
+          <div className="mt-1.5 flex items-center gap-3 flex-wrap">
+            <TagSelector
+              moduleId={mod.id}
+              assignedTags={mod.tags || []}
+              onChanged={onSaved}
+            />
+            {children}
+          </div>
         </div>
       </div>
     </div>

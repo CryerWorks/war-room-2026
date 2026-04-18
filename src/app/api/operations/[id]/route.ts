@@ -10,12 +10,13 @@ export async function GET(
 
   const { data, error } = await supabase
     .from("operations")
-    .select("*, goal:goals(*, domain:domains(*)), phases(*, modules:modules(*))")
+    .select("*, goal:goals(*, domain:domains(*)), phases(*, modules:modules(*, dependencies:module_dependencies!module_id(id, depends_on_id, depends_on:modules!depends_on_id(id, title, is_completed))))")
     .eq("id", id)
     .order("sort_order", { referencedTable: "phases" })
     .single();
 
   if (error) {
+    console.error("Operation fetch error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 

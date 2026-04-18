@@ -22,6 +22,11 @@ interface ModuleItemProps {
     domain?: { color: string } | null;
     operation?: { title: string; goal?: { title: string; icon?: string } } | null;
     phase?: { title: string } | null;
+    dependencies?: Array<{
+      id: string;
+      depends_on_id: string;
+      depends_on?: { id: string; title: string; is_completed: boolean } | null;
+    }> | null;
   };
   // Optional context breadcrumb (used in PhaseDetail)
   breadcrumb?: string;
@@ -145,10 +150,31 @@ export default function ModuleItem({
     );
   }
 
+  // A module is blocked if it has incomplete dependencies
+  const isBlocked = !mod.is_completed &&
+    mod.dependencies &&
+    mod.dependencies.length > 0 &&
+    mod.dependencies.some((d) => d.depends_on && !d.depends_on.is_completed);
+
+  const incompleteDeps = (mod.dependencies || [])
+    .filter((d) => d.depends_on && !d.depends_on.is_completed)
+    .map((d) => d.depends_on!.title);
+
   return (
-    <div className="px-4 sm:px-5 py-3">
+    <div className={`px-4 sm:px-5 py-3 ${isBlocked ? "opacity-60" : ""}`}>
       <div className="flex items-start gap-3">
-        {/* Completion checkbox */}
+        {/* Completion checkbox — locked icon when blocked */}
+        {isBlocked ? (
+          <div
+            className="mt-0.5 w-5 h-5 rounded border-2 border-zinc-700 flex items-center justify-center flex-shrink-0 text-zinc-600"
+            title={`Blocked by: ${incompleteDeps.join(", ")}`}
+          >
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </div>
+        ) : (
         <button
           onClick={() => {
             setGlitching(true);
@@ -173,6 +199,7 @@ export default function ModuleItem({
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </svg>
         </button>
+        )}
 
         {/* Module content */}
         <div className="flex-1 min-w-0">
@@ -214,6 +241,13 @@ export default function ModuleItem({
               {mod.title}
             </span>
           </div>
+
+          {/* Blocked indicator */}
+          {isBlocked && incompleteDeps.length > 0 && (
+            <p className="text-[10px] font-mono text-red-400/60 mb-1">
+              Blocked by: {incompleteDeps.join(", ")}
+            </p>
+          )}
 
           {/* Time slot */}
           {mod.start_time && (

@@ -10,7 +10,7 @@ export async function GET(
 
   const { data, error } = await supabase
     .from("operations")
-    .select("*, goal:goals(*, domain:domains(*)), phases(*, modules:modules(*, dependencies:module_dependencies!module_id(id, depends_on_id, depends_on:modules!depends_on_id(id, title, is_completed))))")
+    .select("*, goal:goals(*, domain:domains(*)), phases(*, modules:modules(*, dependencies:module_dependencies!module_id(id, depends_on_id, depends_on:modules!depends_on_id(id, title, is_completed)), tags:module_tags!module_id(id, tag_id, tag:tags(*))))")
     .eq("id", id)
     .order("sort_order", { referencedTable: "phases" })
     .single();

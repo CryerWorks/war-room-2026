@@ -12,16 +12,24 @@ import { useState } from "react";
 import ScrambleText from "@/components/ui/ScrambleText";
 import PageReveal from "@/components/ui/PageReveal";
 import StreakBadge from "@/components/ui/StreakBadge";
+import NotificationManager from "@/components/ui/NotificationManager";
 
 interface DashboardShellProps {
   streak: {
     current_streak: number;
     longest_streak: number;
   } | null;
+  todayModules?: Array<{
+    id: string;
+    title: string;
+    start_time: string | null;
+    is_completed: boolean;
+    domain?: { name: string } | null;
+  }>;
   children: React.ReactNode;
 }
 
-export default function DashboardShell({ streak, children }: DashboardShellProps) {
+export default function DashboardShell({ streak, todayModules, children }: DashboardShellProps) {
   const [titleDone, setTitleDone] = useState(false);
 
   // Title scramble takes roughly: (3 + 9*2) * 30ms = ~630ms
@@ -51,6 +59,11 @@ export default function DashboardShell({ streak, children }: DashboardShellProps
               className="text-zinc-400"
             />
           </p>
+          {titleDone && todayModules && (
+            <div className="mt-2">
+              <NotificationManager todayModules={todayModules} />
+            </div>
+          )}
         </div>
         {streak && titleDone && (
           <div className="animate-[fadeSlideIn_0.3s_ease-out_both]">

@@ -91,7 +91,7 @@ export default async function Dashboard() {
   }).length;
 
   return (
-    <DashboardShell streak={globalStreak}>
+    <DashboardShell streak={globalStreak} todayModules={todayModules}>
       {/* ============================================================
           LAYER 1: ACTION — What do I need to do right now?
           This is the most prominent section. Full width, no competition.

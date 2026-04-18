@@ -38,6 +38,15 @@ body {
   color: var(--foreground);
 }
 
+/* Force all form elements to use the app's font.
+   Browsers default <select>, <option>, <input>, <textarea> to
+   system fonts (Times New Roman, serif) unless overridden.
+   Using !important because Tailwind's Preflight and browser
+   defaults can override normal specificity. */
+select, option, input, textarea, button {
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif !important;
+}
+
 /* Hexagonal grid texture — small hex cells for a tactical HUD feel.
    Uses an inline SVG data URI (zero network requests, infinite scale).
    The hex pattern is drawn with SVG polygon strokes at very low opacity. */

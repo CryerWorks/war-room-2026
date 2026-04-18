@@ -294,6 +294,7 @@ export default function OperationDetailPage({ params }: OperationDetailPageProps
               color={color}
               operationId={operationId}
               operationTitle={operation.title}
+              allOperationModules={allModules}
               onToggleModule={toggleModule}
               onRefresh={fetchOperation}
               onDeletePhase={(phaseId: string) => {
@@ -487,6 +488,130 @@ function OperationSchedule({
 }
 
 // ============================================================
+// DependencyManager — inline UI for adding/removing prerequisites
+// ============================================================
+
+function DependencyManager({
+  moduleId,
+  dependencies,
+  availableModules,
+  onChanged,
+}: {
+  moduleId: string;
+  dependencies: Array<{
+    id: string;
+    depends_on_id: string;
+    depends_on?: { id: string; title: string; is_completed: boolean } | null;
+  }>;
+  availableModules: Array<{ id: string; title: string }>;
+  onChanged: () => void;
+}) {
+  const [showPicker, setShowPicker] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [error, setError] = useState("");
+
+  // Filter out modules that are already dependencies
+  const depIds = new Set(dependencies.map((d) => d.depends_on_id));
+  const pickable = availableModules.filter((m) => !depIds.has(m.id));
+
+  async function addDependency(dependsOnId: string) {
+    setAdding(true);
+    setError("");
+    try {
+      const res = await fetch("/api/dependencies", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ module_id: moduleId, depends_on_id: dependsOnId }),
+      });
+      if (res.ok) {
+        setShowPicker(false);
+        onChanged();
+      } else {
+        const data = await res.json();
+        setError(data.error || "Failed to add dependency");
+      }
+    } finally {
+      setAdding(false);
+    }
+  }
+
+  async function removeDependency(depId: string) {
+    await fetch(`/api/dependencies/${depId}`, { method: "DELETE" });
+    onChanged();
+  }
+
+  return (
+    <div className="mt-1">
+      {/* Existing dependencies */}
+      {dependencies.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-1.5">
+          {dependencies.map((dep) => (
+            <span
+              key={dep.id}
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono border border-zinc-700 bg-zinc-800/50 text-zinc-400"
+            >
+              <svg className="w-2.5 h-2.5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              {dep.depends_on?.title || "Unknown"}
+              {dep.depends_on?.is_completed && (
+                <svg className="w-2.5 h-2.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+              <button
+                onClick={() => removeDependency(dep.id)}
+                className="text-zinc-600 hover:text-red-400 transition-colors ml-0.5"
+              >
+                &times;
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Add dependency button/picker */}
+      {showPicker ? (
+        <div className="space-y-1.5">
+          {pickable.length === 0 ? (
+            <p className="text-[10px] text-zinc-600">No other modules available</p>
+          ) : (
+            <select
+              onChange={(e) => {
+                if (e.target.value) addDependency(e.target.value);
+              }}
+              disabled={adding}
+              className="w-full px-2 py-1 rounded border border-zinc-700 bg-zinc-900 text-zinc-300 text-xs focus:ring-1 focus:ring-blue-500 outline-none"
+              defaultValue=""
+            >
+              <option value="" disabled>Select prerequisite...</option>
+              {pickable.map((m) => (
+                <option key={m.id} value={m.id}>{m.title}</option>
+              ))}
+            </select>
+          )}
+          {error && <p className="text-[10px] text-red-400">{error}</p>}
+          <button
+            onClick={() => { setShowPicker(false); setError(""); }}
+            className="text-[10px] text-zinc-500 hover:text-zinc-300"
+          >
+            Cancel
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={() => setShowPicker(true)}
+          className="text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors"
+        >
+          + Add dependency
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
 // PhaseDetail — shows modules for a single phase
 // ============================================================
 
@@ -495,6 +620,7 @@ function PhaseDetail({
   color,
   operationId,
   operationTitle,
+  allOperationModules,
   onToggleModule,
   onRefresh,
   onDeletePhase,
@@ -503,6 +629,7 @@ function PhaseDetail({
   color: string;
   operationId: string;
   operationTitle: string;
+  allOperationModules: any[];
   onToggleModule: (id: string, current: boolean) => void;
   onRefresh: () => void;
   onDeletePhase: (phaseId: string) => void;
@@ -637,7 +764,14 @@ function PhaseDetail({
                 onRefresh();
               }}
               onSaved={onRefresh}
-            />
+            >
+              <DependencyManager
+                moduleId={mod.id}
+                dependencies={mod.dependencies || []}
+                availableModules={allOperationModules.filter((m: any) => m.id !== mod.id)}
+                onChanged={onRefresh}
+              />
+            </ModuleItem>
           ))
         )}
       </div>

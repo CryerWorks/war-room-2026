@@ -105,6 +105,16 @@ export interface Module {
 }
 
 // ============================================================
+// ModuleDependency — prerequisite relationship between modules
+// ============================================================
+export interface ModuleDependency {
+  id: string;
+  module_id: string;
+  depends_on_id: string;
+  created_at: string;
+}
+
+// ============================================================
 // ModuleNote — notes attached to a module
 // ============================================================
 export interface ModuleNote {

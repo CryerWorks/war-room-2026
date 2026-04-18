@@ -3,7 +3,7 @@
 // Fetches streak data and module stats to show at-a-glance progress.
 
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import ProgressStats from "@/components/ui/ProgressStats";
 import StreakBadge from "@/components/ui/StreakBadge";
 import ScrambleHeading from "@/components/ui/ScrambleHeading";
@@ -14,6 +14,8 @@ import type { Domain } from "@/types";
 export const dynamic = "force-dynamic";
 
 async function getDomainsData() {
+  const supabase = await createClient();
+
   const [domainsResult, modulesResult, streaksResult, goalsResult, opsResult] =
     await Promise.all([
       supabase.from("domains").select("*").order("name"),

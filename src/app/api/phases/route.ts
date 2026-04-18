@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
 
 // GET /api/phases?operation_id=xxx
 // Fetch phases for an operation, ordered by sort_order.
 export async function GET(request: NextRequest) {
+  const { user, supabase, error: authError } = await getAuthenticatedUser();
+  if (authError) return unauthorized();
+
   const { searchParams } = new URL(request.url);
   const operationId = searchParams.get("operation_id");
 
@@ -29,6 +32,9 @@ export async function GET(request: NextRequest) {
 
 // POST /api/phases — create a new phase within an operation
 export async function POST(request: NextRequest) {
+  const { user, supabase, error: authError } = await getAuthenticatedUser();
+  if (authError) return unauthorized();
+
   const body = await request.json();
   const { operation_id, title, description, sort_order } = body;
 
@@ -46,6 +52,7 @@ export async function POST(request: NextRequest) {
       title,
       description: description || "",
       sort_order: sort_order ?? 0,
+      user_id: user!.id,
     })
     .select()
     .single();

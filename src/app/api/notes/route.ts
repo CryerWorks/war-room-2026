@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
 
 // POST /api/notes — create a note on a module
 export async function POST(request: NextRequest) {
+  const { user, supabase, error: authError } = await getAuthenticatedUser();
+  if (authError) return unauthorized();
+
   const body = await request.json();
 
   const { module_id, content } = body;

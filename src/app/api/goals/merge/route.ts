@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
 
 // POST /api/goals/merge — merge one goal into another.
 //
@@ -17,6 +17,9 @@ import { supabase } from "@/lib/supabase";
 // The explicit reassignment preserves all data.
 
 export async function POST(request: NextRequest) {
+  const { user, supabase, error: authError } = await getAuthenticatedUser();
+  if (authError) return unauthorized();
+
   const body = await request.json();
   const { source_id, target_id } = body;
 

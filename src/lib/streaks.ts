@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { sumModuleHours, timeBetween } from "./hours";
 import type { CompletionEvent } from "@/types";
 
@@ -17,7 +17,7 @@ function todayStr(): string {
  * Update the global streak. Call when a module is completed.
  * Logic: if last active was yesterday → increment. If today → no-op. Otherwise → reset to 1.
  */
-export async function updateGlobalStreak(): Promise<void> {
+export async function updateGlobalStreak(supabase: SupabaseClient): Promise<void> {
   const today = todayStr();
   const { data } = await supabase.from("user_stats").select("*").single();
   if (!data) return;
@@ -45,7 +45,7 @@ export async function updateGlobalStreak(): Promise<void> {
 /**
  * Update a domain-specific streak. Same logic as global but scoped to one domain.
  */
-export async function updateDomainStreak(domainId: string): Promise<void> {
+export async function updateDomainStreak(supabase: SupabaseClient, domainId: string): Promise<void> {
   const today = todayStr();
   const { data } = await supabase
     .from("domain_streaks")
@@ -85,6 +85,7 @@ export async function updateDomainStreak(domainId: string): Promise<void> {
  * If so, auto-mark the phase as completed and return overlay data.
  */
 export async function checkPhaseCompletion(
+  supabase: SupabaseClient,
   phaseId: string
 ): Promise<CompletionEvent | null> {
   // Fetch the phase with its parent chain (operation → goal → domain)
@@ -137,6 +138,7 @@ export async function checkPhaseCompletion(
  * If so, auto-mark the operation as completed and return overlay data.
  */
 export async function checkOperationCompletion(
+  supabase: SupabaseClient,
   operationId: string
 ): Promise<CompletionEvent | null> {
   const { data: operation } = await supabase
@@ -192,6 +194,7 @@ export async function checkOperationCompletion(
  * If so, auto-mark the goal as achieved and return overlay data.
  */
 export async function checkGoalCompletion(
+  supabase: SupabaseClient,
   goalId: string
 ): Promise<CompletionEvent | null> {
   const { data: goal } = await supabase
@@ -264,6 +267,7 @@ export async function checkGoalCompletion(
  * Each level only triggers if ALL siblings at that level are complete.
  */
 export async function runCompletionCascade(
+  supabase: SupabaseClient,
   modulePhaseId: string | null,
   moduleOperationId: string | null,
   moduleDomainId: string
@@ -271,8 +275,8 @@ export async function runCompletionCascade(
   const events: CompletionEvent[] = [];
 
   // Always update streaks on completion
-  await updateGlobalStreak();
-  await updateDomainStreak(moduleDomainId);
+  await updateGlobalStreak(supabase);
+  await updateDomainStreak(supabase, moduleDomainId);
 
   // If module isn't linked to a phase, no cascade to check
   if (!modulePhaseId) return events;
@@ -314,7 +318,7 @@ export async function runCompletionCascade(
   }
 
   // Level 1: did this complete a phase?
-  const phaseEvent = await checkPhaseCompletion(modulePhaseId);
+  const phaseEvent = await checkPhaseCompletion(supabase, modulePhaseId);
 
   // If the phase just completed, auto-activate the next sequential phase
   if (phaseEvent && currentPhase?.operation_id) {
@@ -340,7 +344,7 @@ export async function runCompletionCascade(
 
   // Level 2: did that complete an operation?
   if (!moduleOperationId) return events;
-  const opEvent = await checkOperationCompletion(moduleOperationId);
+  const opEvent = await checkOperationCompletion(supabase, moduleOperationId);
   if (!opEvent) return events;
   events.push(opEvent);
 
@@ -352,7 +356,7 @@ export async function runCompletionCascade(
     .single();
 
   if (operation?.goal_id) {
-    const goalEvent = await checkGoalCompletion(operation.goal_id);
+    const goalEvent = await checkGoalCompletion(supabase, operation.goal_id);
     if (goalEvent) events.push(goalEvent);
   }
 

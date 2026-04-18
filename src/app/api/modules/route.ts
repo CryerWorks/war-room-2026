@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
 
 // GET /api/modules?date=2026-04-15&start_date=...&end_date=...&domain_id=xxx
 // Fetch modules, optionally filtered by date/range and/or domain
 export async function GET(request: NextRequest) {
+  const { user, supabase, error: authError } = await getAuthenticatedUser();
+  if (authError) return unauthorized();
+
   const { searchParams } = new URL(request.url);
   const date = searchParams.get("date");
   const startDate = searchParams.get("start_date");
@@ -37,6 +40,9 @@ export async function GET(request: NextRequest) {
 
 // POST /api/modules — create a new module
 export async function POST(request: NextRequest) {
+  const { user, supabase, error: authError } = await getAuthenticatedUser();
+  if (authError) return unauthorized();
+
   const body = await request.json();
 
   const {
@@ -64,6 +70,7 @@ export async function POST(request: NextRequest) {
       scheduled_date,
       start_time: start_time || null,
       end_time: end_time || null,
+      user_id: user!.id,
     })
     .select("*, domain:domains(*)")
     .single();

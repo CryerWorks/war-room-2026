@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 // GET /api/dependencies?module_id=xxx
 // Fetch dependencies for a module (what it depends on)
 export async function GET(request: NextRequest) {
+  const { user, supabase, error: authError } = await getAuthenticatedUser();
+  if (authError) return unauthorized();
+
   const { searchParams } = new URL(request.url);
   const moduleId = searchParams.get("module_id");
 
@@ -29,8 +33,11 @@ export async function GET(request: NextRequest) {
 // POST /api/dependencies — add a dependency
 // Body: { module_id, depends_on_id }
 // Includes cycle detection: if adding this dependency would create
-// a circular chain (A→B→C→A), it's rejected.
+// a circular chain (A->B->C->A), it's rejected.
 export async function POST(request: NextRequest) {
+  const { user, supabase, error: authError } = await getAuthenticatedUser();
+  if (authError) return unauthorized();
+
   const body = await request.json();
   const { module_id, depends_on_id } = body;
 
@@ -50,7 +57,7 @@ export async function POST(request: NextRequest) {
 
   // Cycle detection: check if depends_on_id already has a path
   // back to module_id. If so, adding this link would create a cycle.
-  const hasCycle = await detectCycle(depends_on_id, module_id);
+  const hasCycle = await detectCycle(supabase, depends_on_id, module_id);
   if (hasCycle) {
     return NextResponse.json(
       { error: "Adding this dependency would create a circular chain" },
@@ -86,7 +93,7 @@ export async function POST(request: NextRequest) {
  * dozens of modules, this is perfectly fast. For thousands of modules,
  * you'd want a database-level recursive CTE query instead.
  */
-async function detectCycle(fromId: string, toId: string): Promise<boolean> {
+async function detectCycle(supabase: SupabaseClient, fromId: string, toId: string): Promise<boolean> {
   const visited = new Set<string>();
   const queue = [fromId];
 

@@ -1,12 +1,12 @@
-// StatusBar — thin tactical footer that sits at the bottom of the viewport.
-// Shows system status info in tiny monospaced text.
-// Gives the "you're inside a secure system" feel.
+// StatusBar — thin tactical footer showing system status and agent info.
 
 "use client";
 
 import { useState, useEffect } from "react";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 export default function StatusBar() {
+  const { user } = useAuth();
   const [time, setTime] = useState("");
 
   useEffect(() => {
@@ -39,8 +39,11 @@ export default function StatusBar() {
           </span>
         </div>
         <div className="flex items-center gap-4 text-[10px] font-mono uppercase tracking-wider text-zinc-600">
-          <span>War Room v1.0</span>
-          <span>Session Active</span>
+          {user && (
+            <span className="text-zinc-500">{user.email}</span>
+          )}
+          <span>War Room v2.0</span>
+          <span>{user ? "Session Active" : "No Session"}</span>
         </div>
       </div>
     </footer>

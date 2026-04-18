@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
 import { runCompletionCascade } from "@/lib/streaks";
 
 // PATCH /api/modules/:id — update a module (edit fields or toggle completion)
@@ -10,6 +10,9 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { user, supabase, error: authError } = await getAuthenticatedUser();
+  if (authError) return unauthorized();
+
   const { id } = await params;
   const body = await request.json();
 
@@ -37,6 +40,7 @@ export async function PATCH(
   let completions: unknown[] = [];
   if (justCompleted && data) {
     completions = await runCompletionCascade(
+      supabase,
       data.phase_id,
       data.operation_id,
       data.domain_id
@@ -51,6 +55,9 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { user, supabase, error: authError } = await getAuthenticatedUser();
+  if (authError) return unauthorized();
+
   const { id } = await params;
 
   const { error } = await supabase.from("modules").delete().eq("id", id);

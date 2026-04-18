@@ -18,7 +18,7 @@
 // WHY 4 weeks? Short enough that changes to rules apply quickly.
 // Long enough that you can see your schedule for the month ahead.
 
-import { supabase } from "./supabase";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 const GENERATION_WINDOW_DAYS = 28; // 4 weeks ahead
 
@@ -69,7 +69,7 @@ function getMatchingDates(
  * Only creates modules for dates that don't already have one from this rule.
  * Returns the number of modules created.
  */
-async function generateForRule(rule: any): Promise<number> {
+async function generateForRule(supabase: SupabaseClient, rule: any): Promise<number> {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -153,7 +153,7 @@ async function generateForRule(rule: any): Promise<number> {
  * Call this on dashboard load to keep the rolling window current.
  * Returns total number of new modules created.
  */
-export async function generateRecurringModules(): Promise<number> {
+export async function generateRecurringModules(supabase: SupabaseClient): Promise<number> {
   const { data: rules } = await supabase
     .from("recurrence_rules")
     .select("*")
@@ -163,7 +163,7 @@ export async function generateRecurringModules(): Promise<number> {
 
   let totalCreated = 0;
   for (const rule of rules) {
-    totalCreated += await generateForRule(rule);
+    totalCreated += await generateForRule(supabase, rule);
   }
 
   return totalCreated;

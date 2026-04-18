@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
 
 // GET /api/domains — fetch all domains with their progress stats
 export async function GET() {
+  const { user, supabase, error: authError } = await getAuthenticatedUser();
+  if (authError) return unauthorized();
+
   // Fetch domains
   const { data: domains, error: domainError } = await supabase
     .from("domains")

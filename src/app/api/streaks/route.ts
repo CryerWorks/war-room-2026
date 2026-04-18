@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
 
 // GET /api/streaks — global and per-domain streak data
 export async function GET() {
+  const { user, supabase, error: authError } = await getAuthenticatedUser();
+  if (authError) return unauthorized();
+
   const [globalResult, domainResult] = await Promise.all([
     supabase.from("user_stats").select("*").single(),
     supabase

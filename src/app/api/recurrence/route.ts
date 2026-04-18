@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
 
 // GET /api/recurrence — list all recurrence rules
 export async function GET() {
+  const { user, supabase, error: authError } = await getAuthenticatedUser();
+  if (authError) return unauthorized();
+
   const { data, error } = await supabase
     .from("recurrence_rules")
     .select("*, domain:domains(name, slug, color)")
@@ -19,6 +22,9 @@ export async function GET() {
 // Body: { title, description, domain_id, operation_id?, phase_id?,
 //         start_time?, end_time?, pattern, days_of_week?, start_date, end_date? }
 export async function POST(request: NextRequest) {
+  const { user, supabase, error: authError } = await getAuthenticatedUser();
+  if (authError) return unauthorized();
+
   const body = await request.json();
 
   const {
@@ -47,6 +53,7 @@ export async function POST(request: NextRequest) {
       days_of_week: days_of_week || [],
       start_date,
       end_date: end_date || null,
+      user_id: user!.id,
     })
     .select()
     .single();

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
 import { parseDocumentToplan } from "@/lib/ingest";
 
 // POST /api/ingest — parse a document and create the full goal hierarchy.
@@ -22,6 +22,9 @@ import { parseDocumentToplan } from "@/lib/ingest";
 // 6. Returns the complete created hierarchy
 
 export async function POST(request: NextRequest) {
+  const { user, supabase, error: authError } = await getAuthenticatedUser();
+  if (authError) return unauthorized();
+
   try {
     const body = await request.json();
     const { document_text, domain_id, domain_slug, start_date, preferences } = body;
@@ -50,6 +53,7 @@ export async function POST(request: NextRequest) {
         description: plan.goal.description,
         icon: plan.goal.icon,
         target_date: plan.goal.target_date,
+        user_id: user!.id,
       })
       .select()
       .single();
@@ -76,6 +80,7 @@ export async function POST(request: NextRequest) {
           title: opPlan.title,
           description: opPlan.description,
           sort_order: totalOperations,
+          user_id: user!.id,
         })
         .select()
         .single();
@@ -95,6 +100,7 @@ export async function POST(request: NextRequest) {
             sort_order: phaseOrder,
             // First phase of first operation starts as "active"
             status: totalOperations === 1 && phaseOrder === 0 ? "active" : "pending",
+            user_id: user!.id,
           })
           .select()
           .single();
@@ -116,6 +122,7 @@ export async function POST(request: NextRequest) {
               scheduled_date: modPlan.scheduled_date || start_date,
               start_time: modPlan.start_time,
               end_time: modPlan.end_time,
+              user_id: user!.id,
             });
 
           if (!modError) totalModules++;

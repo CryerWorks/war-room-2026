@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
 
 // GET /api/goals?domain_id=xxx&status=active
 // Fetch goals for a domain, optionally filtered by status.
 // Returns goals with their operations and nested phases.
 export async function GET(request: NextRequest) {
+  const { user, supabase, error: authError } = await getAuthenticatedUser();
+  if (authError) return unauthorized();
+
   const { searchParams } = new URL(request.url);
   const domainId = searchParams.get("domain_id");
   const status = searchParams.get("status");
@@ -34,6 +37,9 @@ export async function GET(request: NextRequest) {
 
 // POST /api/goals — create a new goal
 export async function POST(request: NextRequest) {
+  const { user, supabase, error: authError } = await getAuthenticatedUser();
+  if (authError) return unauthorized();
+
   const body = await request.json();
   const { domain_id, title, description, icon, target_date, theatre_id } = body;
 
@@ -53,6 +59,7 @@ export async function POST(request: NextRequest) {
       icon: icon || null,
       target_date: target_date || null,
       theatre_id: theatre_id || null,
+      user_id: user!.id,
     })
     .select("*, domain:domains(*)")
     .single();

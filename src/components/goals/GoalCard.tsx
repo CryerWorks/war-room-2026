@@ -56,6 +56,10 @@ export default function GoalCard({ domainSlug, goal, color, onUpdated }: GoalCar
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [exiting, setExiting] = useState(false);
+  const [showMerge, setShowMerge] = useState(false);
+  const [mergeTargets, setMergeTargets] = useState<any[]>([]);
+  const [mergeTargetId, setMergeTargetId] = useState("");
+  const [merging, setMerging] = useState(false);
 
   // Edit form state — pre-filled with current values
   const [editTitle, setEditTitle] = useState(goal.title);
@@ -112,13 +116,42 @@ export default function GoalCard({ domainSlug, goal, color, onUpdated }: GoalCar
   }
 
   async function handleDelete() {
-    // Stage 1: play exit animation
     setExiting(true);
-    // Stage 2: after animation completes (300ms), actually delete
     setTimeout(async () => {
       const res = await fetch(`/api/goals/${goal.id}`, { method: "DELETE" });
       if (res.ok) onUpdated();
     }, 300);
+  }
+
+  // Fetch sibling goals when merge picker opens
+  useEffect(() => {
+    if (!showMerge) return;
+    async function fetchSiblings() {
+      const res = await fetch(`/api/goals?domain_id=${goal.domain_id}&status=active`);
+      if (res.ok) {
+        const all = await res.json();
+        // Filter out this goal — can't merge into yourself
+        setMergeTargets(all.filter((g: any) => g.id !== goal.id));
+      }
+    }
+    fetchSiblings();
+  }, [showMerge, goal.id, goal.domain_id]);
+
+  async function handleMerge(targetId: string) {
+    setMerging(true);
+    try {
+      const res = await fetch("/api/goals/merge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source_id: goal.id, target_id: targetId }),
+      });
+      if (res.ok) {
+        setExiting(true);
+        setTimeout(() => onUpdated(), 300);
+      }
+    } finally {
+      setMerging(false);
+    }
   }
 
   return (
@@ -247,20 +280,69 @@ export default function GoalCard({ domainSlug, goal, color, onUpdated }: GoalCar
                 >
                   Edit
                 </button>
+                {/* Merge — two-step: select target, then confirm */}
+                {showMerge ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    {mergeTargets.length === 0 ? (
+                      <span className="text-xs text-zinc-500">No other goals to merge into</span>
+                    ) : mergeTargetId ? (
+                      <>
+                        <span className="text-xs text-amber-400">
+                          Merge into &quot;{mergeTargets.find((g: any) => g.id === mergeTargetId)?.title}&quot;?
+                        </span>
+                        <button
+                          onClick={() => handleMerge(mergeTargetId)}
+                          disabled={merging}
+                          className="text-xs text-amber-400 font-medium hover:text-amber-300 transition-colors"
+                        >
+                          {merging ? "Merging..." : "Confirm"}
+                        </button>
+                      </>
+                    ) : (
+                      <select
+                        onChange={(e) => setMergeTargetId(e.target.value)}
+                        className="px-2 py-0.5 rounded border border-zinc-700 bg-zinc-900 text-zinc-300 text-[10px] font-mono focus:ring-1 focus:ring-blue-500 outline-none"
+                        defaultValue=""
+                      >
+                        <option value="" disabled>Merge into...</option>
+                        {mergeTargets.map((g: any) => (
+                          <option key={g.id} value={g.id}>
+                            {g.icon ? `${g.icon} ` : ""}{g.title}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    <button
+                      onClick={() => { setShowMerge(false); setMergeTargetId(""); }}
+                      className="text-xs text-zinc-500 hover:text-zinc-300"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => setShowMerge(true)}
+                    className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
+                  >
+                    Merge
+                  </button>
+                )}
+
+                {/* Delete */}
                 {confirmDelete ? (
                   <span className="flex items-center gap-2">
-                    <span className="text-xs text-red-400">Delete this goal and all its operations?</span>
+                    <span className="text-xs text-red-400">Delete?</span>
                     <button
                       onClick={handleDelete}
                       className="text-xs text-red-400 font-medium hover:text-red-300 transition-colors"
                     >
-                      Yes, delete
+                      Yes
                     </button>
                     <button
                       onClick={() => setConfirmDelete(false)}
                       className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
                     >
-                      Cancel
+                      No
                     </button>
                   </span>
                 ) : (

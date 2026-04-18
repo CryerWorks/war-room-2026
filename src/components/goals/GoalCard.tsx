@@ -9,6 +9,8 @@ import { useState, useEffect } from "react";
 import StatusBadge from "@/components/ui/StatusBadge";
 import ProgressStats from "@/components/ui/ProgressStats";
 import HoursDisplay from "@/components/ui/HoursDisplay";
+import TacticalIcon from "@/components/ui/TacticalIcon";
+import IconPicker from "@/components/ui/IconPicker";
 import OperationCard from "@/components/operations/OperationCard";
 import OperationForm from "@/components/operations/OperationForm";
 import { sumModuleHours } from "@/lib/hours";
@@ -128,7 +130,7 @@ export default function GoalCard({ domainSlug, goal, color, onUpdated }: GoalCar
       >
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            {goal.icon && <span className="text-2xl">{goal.icon}</span>}
+            {goal.icon && <TacticalIcon name={goal.icon} size={24} className="text-zinc-300" />}
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold text-zinc-100">{goal.title}</h3>
@@ -177,14 +179,7 @@ export default function GoalCard({ domainSlug, goal, color, onUpdated }: GoalCar
           {editing ? (
             <div className="px-5 py-4 space-y-3 bg-zinc-950/50">
               <div className="flex gap-3">
-                <input
-                  type="text"
-                  value={editIcon}
-                  onChange={(e) => setEditIcon(e.target.value)}
-                  placeholder="🎯"
-                  maxLength={2}
-                  className="w-12 h-10 text-center text-lg rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                />
+                <IconPicker value={editIcon} onChange={setEditIcon} />
                 <input
                   type="text"
                   value={editTitle}

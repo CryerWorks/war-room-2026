@@ -8,6 +8,7 @@
 
 import { useState } from "react";
 import { formatTime } from "@/lib/utils";
+import TacticalIcon from "@/components/ui/TacticalIcon";
 
 interface ModuleItemProps {
   module: {
@@ -178,10 +179,10 @@ export default function ModuleItem({
           {/* Hierarchy breadcrumb */}
           {showHierarchy && mod.operation && (
             <span
-              className="text-[10px] font-mono block mb-0.5"
+              className="text-[10px] font-mono mb-0.5 flex items-center gap-1"
               style={{ color: "#f59e0b" }}
             >
-              {mod.operation.goal?.icon && `${mod.operation.goal.icon} `}
+              {mod.operation.goal?.icon && <TacticalIcon name={mod.operation.goal.icon} size={11} />}
               {mod.operation.goal?.title && `${mod.operation.goal.title} → `}
               {mod.operation.title}
               {mod.phase && ` → ${mod.phase.title}`}

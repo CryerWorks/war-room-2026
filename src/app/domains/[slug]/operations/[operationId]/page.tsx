@@ -12,6 +12,7 @@ import ProgressStats from "@/components/ui/ProgressStats";
 import HoursDisplay from "@/components/ui/HoursDisplay";
 import PhaseForm from "@/components/phases/PhaseForm";
 import CompletionOverlay from "@/components/ui/CompletionOverlay";
+import TacticalIcon from "@/components/ui/TacticalIcon";
 import ModuleItem from "@/components/modules/ModuleItem";
 import { sumModuleHours, formatHours } from "@/lib/hours";
 import { formatDate, formatTime } from "@/lib/utils";
@@ -211,8 +212,9 @@ export default function OperationDetailPage({ params }: OperationDetailPageProps
               <StatusBadge status={operation.status} />
             </div>
             {goal && (
-              <p className="text-sm text-zinc-500">
-                {goal.icon && `${goal.icon} `}Goal: {goal.title}
+              <p className="text-sm text-zinc-500 flex items-center gap-1.5">
+                {goal.icon && <TacticalIcon name={goal.icon} size={14} className="text-zinc-500" />}
+                Goal: {goal.title}
               </p>
             )}
             {operation.description && (

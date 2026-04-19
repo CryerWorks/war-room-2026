@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
+import { mergeGoalsSchema } from "@/lib/schemas";
+import { validate } from "@/lib/validation";
 
 // POST /api/goals/merge — merge one goal into another.
 //
@@ -21,21 +23,10 @@ export async function POST(request: NextRequest) {
   if (authError) return unauthorized();
 
   const body = await request.json();
-  const { source_id, target_id } = body;
+  const parsed = validate(mergeGoalsSchema, body);
+  if (!parsed.success) return parsed.response;
 
-  if (!source_id || !target_id) {
-    return NextResponse.json(
-      { error: "source_id and target_id are required" },
-      { status: 400 }
-    );
-  }
-
-  if (source_id === target_id) {
-    return NextResponse.json(
-      { error: "Cannot merge a goal into itself" },
-      { status: 400 }
-    );
-  }
+  const { source_id, target_id } = parsed.data;
 
   // Verify both goals exist
   const { data: source } = await supabase

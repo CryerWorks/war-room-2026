@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
+import { createTagSchema } from "@/lib/schemas";
+import { validate } from "@/lib/validation";
 
 // GET /api/tags — list all tags
 export async function GET() {
@@ -24,11 +26,10 @@ export async function POST(request: NextRequest) {
   if (authError) return unauthorized();
 
   const body = await request.json();
-  const { name, color } = body;
+  const parsed = validate(createTagSchema, body);
+  if (!parsed.success) return parsed.response;
 
-  if (!name) {
-    return NextResponse.json({ error: "name is required" }, { status: 400 });
-  }
+  const { name, color } = parsed.data;
 
   const { data, error } = await supabase
     .from("tags")

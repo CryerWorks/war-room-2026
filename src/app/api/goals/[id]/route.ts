@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
+import { updateGoalSchema } from "@/lib/schemas";
+import { validate } from "@/lib/validation";
 
 // GET /api/goals/:id — single goal with full operation/phase/module tree
 export async function GET(
@@ -34,17 +36,21 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await request.json();
+  const parsed = validate(updateGoalSchema, body);
+  if (!parsed.success) return parsed.response;
+
+  const updates: Record<string, unknown> = { ...parsed.data };
 
   // If manually completing a goal, set completed_at
-  if (body.status === "completed" && !body.completed_at) {
-    body.completed_at = new Date().toISOString();
+  if (updates.status === "completed" && !updates.completed_at) {
+    updates.completed_at = new Date().toISOString();
   }
 
-  body.updated_at = new Date().toISOString();
+  updates.updated_at = new Date().toISOString();
 
   const { data, error } = await supabase
     .from("goals")
-    .update(body)
+    .update(updates)
     .eq("id", id)
     .select("*, domain:domains(*)")
     .single();

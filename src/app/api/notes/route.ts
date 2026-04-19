@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
+import { createNoteSchema } from "@/lib/schemas";
+import { validate } from "@/lib/validation";
 
 // POST /api/notes — create a note on a module
 export async function POST(request: NextRequest) {
@@ -7,15 +9,10 @@ export async function POST(request: NextRequest) {
   if (authError) return unauthorized();
 
   const body = await request.json();
+  const parsed = validate(createNoteSchema, body);
+  if (!parsed.success) return parsed.response;
 
-  const { module_id, content } = body;
-
-  if (!module_id || !content) {
-    return NextResponse.json(
-      { error: "module_id and content are required" },
-      { status: 400 }
-    );
-  }
+  const { module_id, content } = parsed.data;
 
   const { data, error } = await supabase
     .from("module_notes")

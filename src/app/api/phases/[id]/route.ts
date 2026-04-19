@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
+import { updatePhaseSchema } from "@/lib/schemas";
+import { validate } from "@/lib/validation";
 
 // PATCH /api/phases/:id — update a phase
 export async function PATCH(
@@ -11,16 +13,20 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await request.json();
+  const parsed = validate(updatePhaseSchema, body);
+  if (!parsed.success) return parsed.response;
 
-  if (body.status === "completed" && !body.completed_at) {
-    body.completed_at = new Date().toISOString();
+  const updates: Record<string, unknown> = { ...parsed.data };
+
+  if (updates.status === "completed" && !updates.completed_at) {
+    updates.completed_at = new Date().toISOString();
   }
 
-  body.updated_at = new Date().toISOString();
+  updates.updated_at = new Date().toISOString();
 
   const { data, error } = await supabase
     .from("phases")
-    .update(body)
+    .update(updates)
     .eq("id", id)
     .select()
     .single();

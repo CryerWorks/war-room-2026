@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
+import { updateOperationSchema } from "@/lib/schemas";
+import { validate } from "@/lib/validation";
 
 // GET /api/operations/:id — single operation with full phase/module tree
 export async function GET(
@@ -36,16 +38,20 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await request.json();
+  const parsed = validate(updateOperationSchema, body);
+  if (!parsed.success) return parsed.response;
 
-  if (body.status === "completed" && !body.completed_at) {
-    body.completed_at = new Date().toISOString();
+  const updates: Record<string, unknown> = { ...parsed.data };
+
+  if (updates.status === "completed" && !updates.completed_at) {
+    updates.completed_at = new Date().toISOString();
   }
 
-  body.updated_at = new Date().toISOString();
+  updates.updated_at = new Date().toISOString();
 
   const { data, error } = await supabase
     .from("operations")
-    .update(body)
+    .update(updates)
     .eq("id", id)
     .select("*, goal:goals(*)")
     .single();

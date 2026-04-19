@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
 import { parseDocumentToplan } from "@/lib/ingest";
+import { ingestSchema } from "@/lib/schemas";
+import { validate } from "@/lib/validation";
 
 // POST /api/ingest — parse a document and create the full goal hierarchy.
 //
 // Body:
 // {
-//   document_text: string,     — the raw text to parse
+//   document_text: string,     — the raw text to parse (max 50k chars)
 //   domain_id: string,         — which domain to create the goal under
 //   domain_slug: string,       — slug for context in the prompt
 //   start_date: string,        — YYYY-MM-DD, when to start scheduling
@@ -14,27 +16,47 @@ import { parseDocumentToplan } from "@/lib/ingest";
 // }
 //
 // This endpoint:
-// 1. Sends the document to Claude for parsing
-// 2. Creates the goal in Supabase
-// 3. Creates each operation under the goal
-// 4. Creates each phase under its operation
-// 5. Creates each module under its phase
-// 6. Returns the complete created hierarchy
+// 1. Validates and size-limits the incoming document
+// 2. Sends the document to Claude for parsing
+// 3. Creates the goal in Supabase
+// 4. Creates each operation under the goal
+// 5. Creates each phase under its operation
+// 6. Creates each module under its phase
+// 7. Returns the complete created hierarchy
+
+// Simple in-memory rate limiter: max 5 ingest requests per user per minute.
+const rateLimitMap = new Map<string, number[]>();
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX = 5;
+
+function isRateLimited(userId: string): boolean {
+  const now = Date.now();
+  const timestamps = rateLimitMap.get(userId) || [];
+  const recent = timestamps.filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
+  rateLimitMap.set(userId, recent);
+
+  if (recent.length >= RATE_LIMIT_MAX) return true;
+  recent.push(now);
+  return false;
+}
 
 export async function POST(request: NextRequest) {
   const { user, supabase, error: authError } = await getAuthenticatedUser();
   if (authError) return unauthorized();
 
+  if (isRateLimited(user!.id)) {
+    return NextResponse.json(
+      { error: "Too many ingest requests. Please wait a minute before trying again." },
+      { status: 429 }
+    );
+  }
+
   try {
     const body = await request.json();
-    const { document_text, domain_id, domain_slug, start_date, preferences } = body;
+    const parsed = validate(ingestSchema, body);
+    if (!parsed.success) return parsed.response;
 
-    if (!document_text || !domain_id || !domain_slug || !start_date) {
-      return NextResponse.json(
-        { error: "document_text, domain_id, domain_slug, and start_date are required" },
-        { status: 400 }
-      );
-    }
+    const { document_text, domain_id, domain_slug, start_date, preferences } = parsed.data;
 
     // Step 1: Parse the document with Claude
     const plan = await parseDocumentToplan(

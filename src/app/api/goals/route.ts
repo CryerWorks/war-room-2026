@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
+import { createGoalSchema } from "@/lib/schemas";
+import { validate } from "@/lib/validation";
 
 // GET /api/goals?domain_id=xxx&status=active
 // Fetch goals for a domain, optionally filtered by status.
@@ -41,21 +43,17 @@ export async function POST(request: NextRequest) {
   if (authError) return unauthorized();
 
   const body = await request.json();
-  const { domain_id, title, description, icon, target_date, theatre_id } = body;
+  const parsed = validate(createGoalSchema, body);
+  if (!parsed.success) return parsed.response;
 
-  if (!domain_id || !title) {
-    return NextResponse.json(
-      { error: "domain_id and title are required" },
-      { status: 400 }
-    );
-  }
+  const { domain_id, title, description, icon, target_date, theatre_id } = parsed.data;
 
   const { data, error } = await supabase
     .from("goals")
     .insert({
       domain_id,
       title,
-      description: description || "",
+      description,
       icon: icon || null,
       target_date: target_date || null,
       theatre_id: theatre_id || null,

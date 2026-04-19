@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
+import { createModuleSchema } from "@/lib/schemas";
+import { validate } from "@/lib/validation";
 
 // GET /api/modules?date=2026-04-15&start_date=...&end_date=...&domain_id=xxx
 // Fetch modules, optionally filtered by date/range and/or domain
@@ -44,25 +46,20 @@ export async function POST(request: NextRequest) {
   if (authError) return unauthorized();
 
   const body = await request.json();
+  const parsed = validate(createModuleSchema, body);
+  if (!parsed.success) return parsed.response;
 
   const {
     title, description, domain_id, goal_id,
     operation_id, phase_id,
     scheduled_date, start_time, end_time,
-  } = body;
-
-  if (!title || !domain_id || !scheduled_date) {
-    return NextResponse.json(
-      { error: "title, domain_id, and scheduled_date are required" },
-      { status: 400 }
-    );
-  }
+  } = parsed.data;
 
   const { data, error } = await supabase
     .from("modules")
     .insert({
       title,
-      description: description || "",
+      description,
       domain_id,
       goal_id: goal_id || null,
       operation_id: operation_id || null,

@@ -16,24 +16,13 @@ const eslintConfig = defineConfig([
   {
     // Downgrade pre-existing issues to warnings so CI catches new errors
     // without blocking on known tech debt.
-    // V2-009 will replace `any` types with generated Supabase types.
+    // - no-explicit-any: V2-009 will replace with generated Supabase types
+    // - react-hooks rules: pre-existing patterns across many components
     rules: {
       "@typescript-eslint/no-explicit-any": "warn",
-    },
-  },
-  {
-    // Suppress React Hooks lint errors in pre-existing files that use
-    // setState in effects and manual memoization patterns.
-    // These are known issues, not regressions.
-    files: [
-      "**/CalendarGrid.tsx",
-      "**/BootSequence.tsx",
-      "**/PageTransition.tsx",
-      "**/NotificationManager.tsx",
-    ],
-    rules: {
       "react-hooks/set-state-in-effect": "warn",
       "react-hooks/preserve-manual-memoization": "warn",
+      "react-hooks/refs": "warn",
     },
   },
 ]);

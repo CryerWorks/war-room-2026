@@ -10,6 +10,7 @@ import DashboardShell from "@/components/dashboard/DashboardShell";
 import TodayFocus from "@/components/dashboard/TodayFocus";
 import SituationReport from "@/components/dashboard/SituationReport";
 import FocusSection from "@/components/ui/FocusSection";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import { createClient } from "@/lib/supabase/server";
 import { completionPercentage, todayISO } from "@/lib/utils";
 import { sumModuleHours, formatHours } from "@/lib/hours";
@@ -96,7 +97,9 @@ export default async function Dashboard() {
           This is the most prominent section. Full width, no competition.
           ============================================================ */}
       <FocusSection>
-        <TodayFocus modules={todayModules} domains={domains} />
+        <ErrorBoundary section="Today's Focus">
+          <TodayFocus modules={todayModules} domains={domains} />
+        </ErrorBoundary>
       </FocusSection>
 
       {/* ============================================================
@@ -107,43 +110,45 @@ export default async function Dashboard() {
           metrics now, not a hero element.
           ============================================================ */}
       <FocusSection>
-        <CornerBrackets color="#3b82f6">
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-5 py-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-              <div>
-                <p className="text-2xl font-bold font-mono text-zinc-100">
-                  {overallPercentage}%
-                </p>
-                <p className="text-xs text-zinc-500">Completion</p>
+        <ErrorBoundary section="Progress Stats">
+          <CornerBrackets color="#3b82f6">
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-5 py-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                <div>
+                  <p className="text-2xl font-bold font-mono text-zinc-100">
+                    {overallPercentage}%
+                  </p>
+                  <p className="text-xs text-zinc-500">Completion</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold font-mono text-zinc-100">
+                    {completedToday}
+                  </p>
+                  <p className="text-xs text-zinc-500">Done Today</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold font-mono text-zinc-100">
+                    {formatHours(totalHours)}
+                  </p>
+                  <p className="text-xs text-zinc-500">Total Hours</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold font-mono text-zinc-100">
+                    {upcomingThisWeek}
+                  </p>
+                  <p className="text-xs text-zinc-500">This Week</p>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold font-mono text-zinc-100">
-                  {completedToday}
-                </p>
-                <p className="text-xs text-zinc-500">Done Today</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold font-mono text-zinc-100">
-                  {formatHours(totalHours)}
-                </p>
-                <p className="text-xs text-zinc-500">Total Hours</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold font-mono text-zinc-100">
-                  {upcomingThisWeek}
-                </p>
-                <p className="text-xs text-zinc-500">This Week</p>
+              {/* Thin overall progress bar beneath the stats */}
+              <div className="mt-3 w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-700"
+                  style={{ width: `${overallPercentage}%`, backgroundColor: "#3b82f6" }}
+                />
               </div>
             </div>
-            {/* Thin overall progress bar beneath the stats */}
-            <div className="mt-3 w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-700"
-                style={{ width: `${overallPercentage}%`, backgroundColor: "#3b82f6" }}
-              />
-            </div>
-          </div>
-        </CornerBrackets>
+          </CornerBrackets>
+        </ErrorBoundary>
       </FocusSection>
 
       {/* ============================================================
@@ -151,6 +156,7 @@ export default async function Dashboard() {
           Three cards side by side, each clickable to drill in.
           ============================================================ */}
       <FocusSection>
+        <ErrorBoundary section="Domain Overview">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {domains.map((domain: Domain) => {
             const domainModules = modules.filter((m) => m.domain_id === domain.id);
@@ -199,6 +205,7 @@ export default async function Dashboard() {
             );
           })}
         </div>
+        </ErrorBoundary>
       </FocusSection>
 
       {/* ============================================================
@@ -208,10 +215,12 @@ export default async function Dashboard() {
           Includes completed objectives in a separate collapsible.
           ============================================================ */}
       <FocusSection>
-        <SituationReport
-          activeOperations={activeOperations}
-          completedGoals={completedGoals}
-        />
+        <ErrorBoundary section="Situation Report">
+          <SituationReport
+            activeOperations={activeOperations}
+            completedGoals={completedGoals}
+          />
+        </ErrorBoundary>
       </FocusSection>
     </DashboardShell>
   );

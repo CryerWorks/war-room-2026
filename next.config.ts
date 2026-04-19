@@ -6,21 +6,25 @@ const nextConfig: NextConfig = {
 };
 
 export default withSentryConfig(nextConfig, {
-  // Suppress build logs unless debugging source map uploads
-  silent: true,
+  org: "cryer-works",
+  project: "warroom",
 
-  // Uploads source maps to Sentry so production stack traces are readable.
-  // Maps are deleted from the build output after upload to avoid exposing source code.
-  sourcemaps: {
-    deleteSourcemapsAfterUpload: true,
-  },
+  // Source map upload auth token (reads from .env.sentry-build-plugin or CI env)
+  authToken: process.env.SENTRY_AUTH_TOKEN,
 
-  // Tunnel Sentry events through a Next.js route to bypass ad-blockers.
-  // Generates a random route path per build so blockers can't pattern-match it.
-  tunnelRoute: true,
+  // Upload a larger set of source maps for prettier stack traces (increases build time)
+  widenClientFileUpload: true,
 
-  // Tree-shake Sentry debug logging from production bundle
-  bundleSizeOptimizations: {
-    excludeDebugStatements: true,
+  // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers
+  tunnelRoute: "/monitoring",
+
+  // Only print logs for uploading source maps in CI
+  silent: !process.env.CI,
+
+  webpack: {
+    automaticVercelMonitors: true,
+    treeshake: {
+      removeDebugLogging: true,
+    },
   },
 });

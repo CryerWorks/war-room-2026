@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from "react";
 import IconPicker from "@/components/ui/IconPicker";
+import type { Theatre } from "@/types";
 
 interface GoalFormProps {
   domainId: string;
@@ -20,7 +21,7 @@ export default function GoalForm({ domainId, onCreated, onCancel }: GoalFormProp
   const [icon, setIcon] = useState("");
   const [targetDate, setTargetDate] = useState("");
   const [theatreId, setTheatreId] = useState("");
-  const [theatres, setTheatres] = useState<any[]>([]);
+  const [theatres, setTheatres] = useState<Theatre[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   // Fetch available theatres for the selector
@@ -123,7 +124,7 @@ export default function GoalForm({ domainId, onCreated, onCancel }: GoalFormProp
             className="w-full px-3 py-2 rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
           >
             <option value="">— No theatre —</option>
-            {theatres.map((t: any) => (
+            {theatres.map((t) => (
               <option key={t.id} value={t.id}>
                 {t.icon ? `${t.icon} ` : ""}{t.name}
               </option>

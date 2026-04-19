@@ -16,7 +16,7 @@ import TacticalIcon from "@/components/ui/TacticalIcon";
 import ModuleItem from "@/components/modules/ModuleItem";
 import { sumModuleHours, formatHours } from "@/lib/hours";
 import { formatDate, formatTime } from "@/lib/utils";
-import type { CompletionEvent } from "@/types";
+import type { CompletionEvent, OperationWithFullDetails, PhaseWithFullModules, ModuleWithFullDetails } from "@/types";
 
 interface OperationDetailPageProps {
   params: Promise<{ slug: string; operationId: string }>;
@@ -24,7 +24,7 @@ interface OperationDetailPageProps {
 
 export default function OperationDetailPage({ params }: OperationDetailPageProps) {
   const { slug, operationId } = use(params);
-  const [operation, setOperation] = useState<any>(null);
+  const [operation, setOperation] = useState<OperationWithFullDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [showPhaseForm, setShowPhaseForm] = useState(false);
   const [expandedPhase, setExpandedPhase] = useState<string | null>(null);
@@ -44,12 +44,12 @@ export default function OperationDetailPage({ params }: OperationDetailPageProps
     try {
       const res = await fetch(`/api/operations/${operationId}`);
       if (res.ok) {
-        const data = await res.json();
+        const data: OperationWithFullDetails = await res.json();
         setOperation(data);
         // Only auto-expand if nothing is currently selected
         if (!expandedPhaseRef.current) {
           const activePhase = data.phases?.find(
-            (p: any) => p.status === "active" || p.status === "pending"
+            (p) => p.status === "active" || p.status === "pending"
           );
           if (activePhase) {
             setExpandedPhaseTracked(activePhase.id);
@@ -89,7 +89,7 @@ export default function OperationDetailPage({ params }: OperationDetailPageProps
   // Phase 2 can become active. Clicking any other phase just expands
   // its detail panel for viewing.
   async function activatePhase(phaseId: string) {
-    const phase = sortedPhases.find((p: any) => p.id === phaseId);
+    const phase = sortedPhases.find((p) => p.id === phaseId);
     if (!phase) return;
 
     // Completed phases and already-active phases just expand the detail
@@ -100,13 +100,13 @@ export default function OperationDetailPage({ params }: OperationDetailPageProps
 
     // Find the next activatable phase: the first pending phase where
     // all phases before it (lower sort_order) are completed.
-    const nextActivatable = sortedPhases.find((p: any) => {
+    const nextActivatable = sortedPhases.find((p) => {
       if (p.status !== "pending") return false;
       // Check all phases with lower sort_order are completed
       const priorPhases = sortedPhases.filter(
-        (prior: any) => prior.sort_order < p.sort_order
+        (prior) => prior.sort_order < p.sort_order
       );
-      return priorPhases.every((prior: any) => prior.status === "completed");
+      return priorPhases.every((prior) => prior.status === "completed");
     });
 
     // Only allow activation if this IS the next sequential phase
@@ -117,7 +117,7 @@ export default function OperationDetailPage({ params }: OperationDetailPageProps
     }
 
     // Deactivate any currently active phase first
-    const currentlyActive = sortedPhases.find((p: any) => p.status === "active");
+    const currentlyActive = sortedPhases.find((p) => p.status === "active");
     if (currentlyActive) {
       await fetch(`/api/phases/${currentlyActive.id}`, {
         method: "PATCH",
@@ -151,26 +151,26 @@ export default function OperationDetailPage({ params }: OperationDetailPageProps
 
   // Sort phases by sort_order
   const sortedPhases = [...(operation.phases || [])].sort(
-    (a: any, b: any) => a.sort_order - b.sort_order
+    (a, b) => a.sort_order - b.sort_order
   );
 
   // Compute stats
-  const allModules = sortedPhases.flatMap((p: any) => p.modules || []);
+  const allModules = sortedPhases.flatMap((p) => p.modules || []);
   const totalModules = allModules.length;
-  const completedModules = allModules.filter((m: any) => m.is_completed).length;
+  const completedModules = allModules.filter((m) => m.is_completed).length;
   const totalHours = sumModuleHours(allModules);
   const completedPhases = sortedPhases.filter(
-    (p: any) => p.status === "completed"
+    (p) => p.status === "completed"
   ).length;
 
   // Timeline steps for the stepper
-  const timelineSteps = sortedPhases.map((phase: any) => ({
+  const timelineSteps = sortedPhases.map((phase) => ({
     id: phase.id,
     title: phase.title,
     description: phase.description,
     status: phase.status,
     stats: {
-      completed: (phase.modules || []).filter((m: any) => m.is_completed).length,
+      completed: (phase.modules || []).filter((m) => m.is_completed).length,
       total: (phase.modules || []).length,
     },
   }));
@@ -290,7 +290,7 @@ export default function OperationDetailPage({ params }: OperationDetailPageProps
         <div className="lg:col-span-2">
           {expandedPhase ? (
             <PhaseDetail
-              phase={sortedPhases.find((p: any) => p.id === expandedPhase)}
+              phase={sortedPhases.find((p) => p.id === expandedPhase)}
               color={color}
               operationId={operationId}
               operationTitle={operation.title}
@@ -327,13 +327,13 @@ export default function OperationDetailPage({ params }: OperationDetailPageProps
 function OperationSchedule({
   phases,
 }: {
-  phases: any[];
+  phases: PhaseWithFullModules[];
 }) {
   const [expanded, setExpanded] = useState(false);
 
   // Gather all modules from all phases with their phase context
-  const allModules = phases.flatMap((phase: any) =>
-    (phase.modules || []).map((mod: any) => ({
+  const allModules = phases.flatMap((phase) =>
+    (phase.modules || []).map((mod) => ({
       ...mod,
       phaseTitle: phase.title,
     }))
@@ -440,7 +440,7 @@ function OperationSchedule({
 
                   {/* Modules for this date */}
                   <div className="space-y-1.5 ml-2">
-                    {dayModules.map((mod: any) => (
+                    {dayModules.map((mod) => (
                       <div
                         key={mod.id}
                         className={`flex items-center gap-2 text-sm ${
@@ -626,11 +626,11 @@ function PhaseDetail({
   onRefresh,
   onDeletePhase,
 }: {
-  phase: any;
+  phase: PhaseWithFullModules | undefined;
   color: string;
   operationId: string;
   operationTitle: string;
-  allOperationModules: any[];
+  allOperationModules: ModuleWithFullDetails[];
   onToggleModule: (id: string, current: boolean) => void;
   onRefresh: () => void;
   onDeletePhase: (phaseId: string) => void;
@@ -655,12 +655,12 @@ function PhaseDetail({
   }
 
   const modules = phase.modules || [];
-  const completed = modules.filter((m: any) => m.is_completed).length;
+  const completed = modules.filter((m) => m.is_completed).length;
   const hours = sumModuleHours(modules);
 
   async function addModule(e: React.FormEvent) {
     e.preventDefault();
-    if (!newModuleTitle.trim()) return;
+    if (!newModuleTitle.trim() || !phase) return;
 
     setSubmitting(true);
     try {
@@ -754,7 +754,7 @@ function PhaseDetail({
             No modules in this phase yet. Add modules to start tracking.
           </div>
         ) : (
-          modules.map((mod: any, index: number) => (
+          modules.map((mod, index) => (
             <ModuleItem
               key={mod.id}
               module={mod}
@@ -769,7 +769,7 @@ function PhaseDetail({
               <DependencyManager
                 moduleId={mod.id}
                 dependencies={mod.dependencies || []}
-                availableModules={allOperationModules.filter((m: any) => m.id !== mod.id)}
+                availableModules={allOperationModules.filter((m) => m.id !== mod.id)}
                 onChanged={onRefresh}
               />
             </ModuleItem>

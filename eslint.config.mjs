@@ -14,15 +14,21 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
   ]),
   {
-    // Downgrade pre-existing issues to warnings so CI catches new errors
-    // without blocking on known tech debt.
-    // - no-explicit-any: V2-009 will replace with generated Supabase types
-    // - react-hooks rules: pre-existing patterns across many components
+    // V2-009 cleaned up production `any` types — error on new ones.
+    // React Hooks rules: pre-existing patterns across many components.
     rules: {
-      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-explicit-any": "error",
       "react-hooks/set-state-in-effect": "warn",
       "react-hooks/preserve-manual-memoization": "warn",
       "react-hooks/refs": "warn",
+    },
+  },
+  {
+    // Test files and mocks legitimately need some `any` for mock
+    // infrastructure — keep as warning, not error.
+    files: ["**/__tests__/**", "**/*.test.*"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "warn",
     },
   },
 ]);

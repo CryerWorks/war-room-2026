@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
+import { createTheatreSchema } from "@/lib/schemas";
+import { validate } from "@/lib/validation";
 
 // GET /api/theatres — list all theatres with their goals
 export async function GET() {
@@ -24,20 +26,16 @@ export async function POST(request: NextRequest) {
   if (authError) return unauthorized();
 
   const body = await request.json();
-  const { name, description, icon, color } = body;
+  const parsed = validate(createTheatreSchema, body);
+  if (!parsed.success) return parsed.response;
 
-  if (!name) {
-    return NextResponse.json(
-      { error: "name is required" },
-      { status: 400 }
-    );
-  }
+  const { name, description, icon, color } = parsed.data;
 
   const { data, error } = await supabase
     .from("theatres")
     .insert({
       name,
-      description: description || "",
+      description,
       icon: icon || null,
       color: color || "#8b5cf6",
       user_id: user!.id,

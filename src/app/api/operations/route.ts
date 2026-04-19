@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
+import { createOperationSchema } from "@/lib/schemas";
+import { validate } from "@/lib/validation";
 
 // GET /api/operations?goal_id=xxx&domain_id=xxx&status=active
 // Fetch operations with their phases and module counts.
@@ -45,14 +47,10 @@ export async function POST(request: NextRequest) {
   if (authError) return unauthorized();
 
   const body = await request.json();
-  const { goal_id, domain_id, title, description } = body;
+  const parsed = validate(createOperationSchema, body);
+  if (!parsed.success) return parsed.response;
 
-  if (!goal_id || !domain_id || !title) {
-    return NextResponse.json(
-      { error: "goal_id, domain_id, and title are required" },
-      { status: 400 }
-    );
-  }
+  const { goal_id, domain_id, title, description } = parsed.data;
 
   const { data, error } = await supabase
     .from("operations")
@@ -60,7 +58,7 @@ export async function POST(request: NextRequest) {
       goal_id,
       domain_id,
       title,
-      description: description || "",
+      description,
       user_id: user!.id,
     })
     .select("*, goal:goals(*)")

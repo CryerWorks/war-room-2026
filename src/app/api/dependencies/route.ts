@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
+import { createDependencySchema } from "@/lib/schemas";
+import { validate } from "@/lib/validation";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // GET /api/dependencies?module_id=xxx
@@ -39,21 +41,10 @@ export async function POST(request: NextRequest) {
   if (authError) return unauthorized();
 
   const body = await request.json();
-  const { module_id, depends_on_id } = body;
+  const parsed = validate(createDependencySchema, body);
+  if (!parsed.success) return parsed.response;
 
-  if (!module_id || !depends_on_id) {
-    return NextResponse.json(
-      { error: "module_id and depends_on_id are required" },
-      { status: 400 }
-    );
-  }
-
-  if (module_id === depends_on_id) {
-    return NextResponse.json(
-      { error: "A module cannot depend on itself" },
-      { status: 400 }
-    );
-  }
+  const { module_id, depends_on_id } = parsed.data;
 
   // Cycle detection: check if depends_on_id already has a path
   // back to module_id. If so, adding this link would create a cycle.

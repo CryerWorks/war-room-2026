@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
+import { updateRecurrenceSchema } from "@/lib/schemas";
+import { validate } from "@/lib/validation";
 
 // PATCH /api/recurrence/:id — update a recurrence rule (or deactivate it)
 export async function PATCH(
@@ -11,11 +13,15 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await request.json();
-  body.updated_at = new Date().toISOString();
+  const parsed = validate(updateRecurrenceSchema, body);
+  if (!parsed.success) return parsed.response;
+
+  const updates: Record<string, unknown> = { ...parsed.data };
+  updates.updated_at = new Date().toISOString();
 
   const { data, error } = await supabase
     .from("recurrence_rules")
-    .update(body)
+    .update(updates)
     .eq("id", id)
     .select()
     .single();

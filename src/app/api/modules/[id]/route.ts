@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
 import { runCompletionCascade } from "@/lib/streaks";
+import { updateModuleSchema } from "@/lib/schemas";
+import { validate } from "@/lib/validation";
 
 // PATCH /api/modules/:id — update a module (edit fields or toggle completion)
 // When a module is completed, runs the cascade check:
@@ -15,19 +17,22 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await request.json();
+  const parsed = validate(updateModuleSchema, body);
+  if (!parsed.success) return parsed.response;
 
-  const justCompleted = body.is_completed === true;
+  const updates: Record<string, unknown> = { ...parsed.data };
+  const justCompleted = updates.is_completed === true;
 
   // If toggling completion, set completed_at timestamp
-  if ("is_completed" in body) {
-    body.completed_at = body.is_completed ? new Date().toISOString() : null;
+  if ("is_completed" in updates) {
+    updates.completed_at = updates.is_completed ? new Date().toISOString() : null;
   }
 
-  body.updated_at = new Date().toISOString();
+  updates.updated_at = new Date().toISOString();
 
   const { data, error } = await supabase
     .from("modules")
-    .update(body)
+    .update(updates)
     .eq("id", id)
     .select("*, domain:domains(*), notes:module_notes(*)")
     .single();

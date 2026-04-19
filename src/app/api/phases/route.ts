@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
+import { createPhaseSchema } from "@/lib/schemas";
+import { validate } from "@/lib/validation";
 
 // GET /api/phases?operation_id=xxx
 // Fetch phases for an operation, ordered by sort_order.
@@ -36,22 +38,18 @@ export async function POST(request: NextRequest) {
   if (authError) return unauthorized();
 
   const body = await request.json();
-  const { operation_id, title, description, sort_order } = body;
+  const parsed = validate(createPhaseSchema, body);
+  if (!parsed.success) return parsed.response;
 
-  if (!operation_id || !title) {
-    return NextResponse.json(
-      { error: "operation_id and title are required" },
-      { status: 400 }
-    );
-  }
+  const { operation_id, title, description, sort_order } = parsed.data;
 
   const { data, error } = await supabase
     .from("phases")
     .insert({
       operation_id,
       title,
-      description: description || "",
-      sort_order: sort_order ?? 0,
+      description,
+      sort_order,
       user_id: user!.id,
     })
     .select()

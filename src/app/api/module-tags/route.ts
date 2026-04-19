@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser, unauthorized } from "@/lib/auth";
+import { createModuleTagSchema } from "@/lib/schemas";
+import { validate } from "@/lib/validation";
 
 // POST /api/module-tags — assign a tag to a module
 // Body: { module_id, tag_id }
@@ -8,14 +10,10 @@ export async function POST(request: NextRequest) {
   if (authError) return unauthorized();
 
   const body = await request.json();
-  const { module_id, tag_id } = body;
+  const parsed = validate(createModuleTagSchema, body);
+  if (!parsed.success) return parsed.response;
 
-  if (!module_id || !tag_id) {
-    return NextResponse.json(
-      { error: "module_id and tag_id are required" },
-      { status: 400 }
-    );
-  }
+  const { module_id, tag_id } = parsed.data;
 
   const { data, error } = await supabase
     .from("module_tags")

@@ -1,5 +1,7 @@
 # War Room 2026
 
+[![CI](https://github.com/CryerWorks/war-room-2026/actions/workflows/ci.yml/badge.svg)](https://github.com/CryerWorks/war-room-2026/actions/workflows/ci.yml)
+
 A personal goal-tracking application built as a hands-on exercise in full-stack development, Git workflow, and deployment operations.
 
 The app tracks progress across three development domains — linguistic, technical, and physical — using a hierarchical system of goals, operations, phases, and daily modules. Built from scratch over the course of a single development session as a learning project.

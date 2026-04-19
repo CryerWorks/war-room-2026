@@ -25,7 +25,7 @@ const GENERATION_WINDOW_DAYS = 28; // 4 weeks ahead
 /**
  * Get all dates between start and end (inclusive) that match a recurrence pattern.
  */
-function getMatchingDates(
+export function getMatchingDates(
   startDate: Date,
   endDate: Date,
   pattern: string,

@@ -31,7 +31,12 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        # npm install (not ci) because the lockfile is generated on Windows.
+        # npm ci rejects lockfiles missing platform-specific optional deps
+        # (e.g. @rolldown/binding-linux-x64-gnu sub-deps like @emnapi/core).
+        # npm install respects pinned versions but resolves missing native bindings.
+        # See: https://github.com/npm/cli/issues/4828
+        run: npm install
 
       - name: Lint
         run: npm run lint

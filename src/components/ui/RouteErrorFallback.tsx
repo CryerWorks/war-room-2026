@@ -3,6 +3,7 @@
 // RouteErrorFallback — shared tactical-themed error UI for route-level error.tsx files.
 // Separated from the route files so all four routes share the same look.
 
+import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 import { IconAlertTriangle, IconRefresh } from "@tabler/icons-react";
 
@@ -18,13 +19,9 @@ export default function RouteErrorFallback({
   route,
 }: RouteErrorFallbackProps) {
   useEffect(() => {
-    console.error(
-      `[War Room] Route error in "${route}":\n`,
-      error.message,
-      error.digest ? `\nDigest: ${error.digest}` : "",
-      "\n\nStack:",
-      error.stack
-    );
+    Sentry.captureException(error, {
+      tags: { boundary: "route-error", route },
+    });
   }, [error, route]);
 
   return (

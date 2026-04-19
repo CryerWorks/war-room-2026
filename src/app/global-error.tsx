@@ -3,6 +3,7 @@
 // global-error — last-resort fallback when the root layout itself crashes.
 // Must define its own <html>/<body> because it replaces the root layout.
 
+import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 
 export default function GlobalError({
@@ -13,7 +14,9 @@ export default function GlobalError({
   unstable_retry: () => void;
 }) {
   useEffect(() => {
-    console.error("[War Room] Critical error:\n", error.message, "\n\nStack:", error.stack);
+    Sentry.captureException(error, {
+      tags: { boundary: "global-error" },
+    });
   }, [error]);
 
   return (

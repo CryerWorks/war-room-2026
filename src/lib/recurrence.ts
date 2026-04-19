@@ -19,6 +19,7 @@
 // Long enough that you can see your schedule for the month ahead.
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { RecurrenceRule } from "@/types";
 
 const GENERATION_WINDOW_DAYS = 28; // 4 weeks ahead
 
@@ -69,7 +70,7 @@ export function getMatchingDates(
  * Only creates modules for dates that don't already have one from this rule.
  * Returns the number of modules created.
  */
-async function generateForRule(supabase: SupabaseClient, rule: any): Promise<number> {
+async function generateForRule(supabase: SupabaseClient, rule: RecurrenceRule): Promise<number> {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 

@@ -53,7 +53,7 @@ import {
 // Map of icon names to components — this is the curated set
 // available in the icon picker. Adding a new icon is just one
 // line here + one entry in ICON_CATEGORIES below.
-const ICON_MAP: Record<string, React.ComponentType<any>> = {
+const ICON_MAP: Record<string, React.ComponentType<{ size?: number; stroke?: number; className?: string; style?: React.CSSProperties }>> = {
   target: IconTarget,
   rocket: IconRocket,
   brain: IconBrain,

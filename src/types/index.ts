@@ -163,6 +163,42 @@ export interface DomainStreak {
 }
 
 // ============================================================
+// RecurrenceRule — defines a recurring module schedule
+// ============================================================
+export interface RecurrenceRule {
+  id: string;
+  title: string;
+  description: string;
+  domain_id: string;
+  operation_id: string | null;
+  phase_id: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  pattern: "daily" | "weekly" | "monthly";
+  days_of_week: number[];
+  start_date: string;
+  end_date: string | null;
+  is_active: boolean;
+  last_generated: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================================
+// IngestResult — response from the AI document ingestion endpoint
+// ============================================================
+export interface IngestResult {
+  success: boolean;
+  goal_id: string;
+  summary: {
+    goal: string;
+    operations: number;
+    phases: number;
+    modules: number;
+  };
+}
+
+// ============================================================
 // Derived types — pre-joined for the UI
 // ============================================================
 
@@ -243,6 +279,46 @@ export interface CompletionEvent {
     label: string; // e.g. "Operation" or "Goal"
     name: string;  // e.g. "Backend Program" or "Build Full-Stack Skills"
   } | null;
+}
+
+// ============================================================
+// API response types — shapes returned by Supabase joins
+// ============================================================
+
+/** Goal with nested operations/phases/modules from /api/goals */
+export interface GoalWithDetails extends Goal {
+  domain?: Domain;
+  operations: Array<Operation & {
+    phases: Array<Phase & {
+      modules: Array<Pick<Module, "id" | "is_completed" | "start_time" | "end_time">>;
+    }>;
+  }>;
+}
+
+/** Module with full details including dependencies and tags */
+export interface ModuleWithFullDetails extends Module {
+  domain?: Domain;
+  notes?: ModuleNote[];
+  dependencies?: Array<ModuleDependency & {
+    depends_on?: Pick<Module, "id" | "title" | "is_completed"> | null;
+  }>;
+  tags?: ModuleTag[];
+}
+
+/** Phase with fully-detailed modules (for operation detail page) */
+export interface PhaseWithFullModules extends Phase {
+  modules: ModuleWithFullDetails[];
+}
+
+/** Operation with goal, domain, and full nested phases/modules */
+export interface OperationWithFullDetails extends Operation {
+  goal?: Goal & { domain?: Domain };
+  phases: PhaseWithFullModules[];
+}
+
+/** Domain streak with joined domain info (from /api/streaks) */
+export interface DomainStreakWithDomain extends DomainStreak {
+  domain?: Pick<Domain, "name" | "slug" | "color">;
 }
 
 // ============================================================

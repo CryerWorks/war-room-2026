@@ -12,9 +12,10 @@ export async function POST() {
   try {
     const created = await generateRecurringModules(supabase);
     return NextResponse.json({ generated: created });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Generation failed";
     return NextResponse.json(
-      { error: err.message || "Generation failed" },
+      { error: message },
       { status: 500 }
     );
   }

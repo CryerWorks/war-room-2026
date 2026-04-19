@@ -14,6 +14,7 @@ import IconPicker from "@/components/ui/IconPicker";
 import OperationCard from "@/components/operations/OperationCard";
 import OperationForm from "@/components/operations/OperationForm";
 import { sumModuleHours } from "@/lib/hours";
+import type { Goal, Theatre } from "@/types";
 
 interface GoalCardProps {
   domainSlug: string;
@@ -57,7 +58,7 @@ export default function GoalCard({ domainSlug, goal, color, onUpdated }: GoalCar
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [exiting, setExiting] = useState(false);
   const [showMerge, setShowMerge] = useState(false);
-  const [mergeTargets, setMergeTargets] = useState<any[]>([]);
+  const [mergeTargets, setMergeTargets] = useState<Goal[]>([]);
   const [mergeTargetId, setMergeTargetId] = useState("");
   const [merging, setMerging] = useState(false);
 
@@ -67,7 +68,7 @@ export default function GoalCard({ domainSlug, goal, color, onUpdated }: GoalCar
   const [editIcon, setEditIcon] = useState(goal.icon || "");
   const [editTargetDate, setEditTargetDate] = useState(goal.target_date || "");
   const [editTheatreId, setEditTheatreId] = useState(goal.theatre_id || "");
-  const [theatres, setTheatres] = useState<any[]>([]);
+  const [theatres, setTheatres] = useState<Theatre[]>([]);
   const [saving, setSaving] = useState(false);
 
   // Fetch theatres when editing starts
@@ -129,9 +130,9 @@ export default function GoalCard({ domainSlug, goal, color, onUpdated }: GoalCar
     async function fetchSiblings() {
       const res = await fetch(`/api/goals?domain_id=${goal.domain_id}&status=active`);
       if (res.ok) {
-        const all = await res.json();
+        const all: Goal[] = await res.json();
         // Filter out this goal — can't merge into yourself
-        setMergeTargets(all.filter((g: any) => g.id !== goal.id));
+        setMergeTargets(all.filter((g) => g.id !== goal.id));
       }
     }
     fetchSiblings();
@@ -240,7 +241,7 @@ export default function GoalCard({ domainSlug, goal, color, onUpdated }: GoalCar
                   className="w-full px-3 py-2 rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                 >
                   <option value="">— No theatre —</option>
-                  {theatres.map((t: any) => (
+                  {theatres.map((t) => (
                     <option key={t.id} value={t.id}>
                       {t.icon ? `${t.icon} ` : ""}{t.name}
                     </option>
@@ -288,7 +289,7 @@ export default function GoalCard({ domainSlug, goal, color, onUpdated }: GoalCar
                     ) : mergeTargetId ? (
                       <>
                         <span className="text-xs text-amber-400">
-                          Merge into &quot;{mergeTargets.find((g: any) => g.id === mergeTargetId)?.title}&quot;?
+                          Merge into &quot;{mergeTargets.find((g) => g.id === mergeTargetId)?.title}&quot;?
                         </span>
                         <button
                           onClick={() => handleMerge(mergeTargetId)}
@@ -305,7 +306,7 @@ export default function GoalCard({ domainSlug, goal, color, onUpdated }: GoalCar
                         defaultValue=""
                       >
                         <option value="" disabled>Merge into...</option>
-                        {mergeTargets.map((g: any) => (
+                        {mergeTargets.map((g) => (
                           <option key={g.id} value={g.id}>
                             {g.icon ? `${g.icon} ` : ""}{g.title}
                           </option>

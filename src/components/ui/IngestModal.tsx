@@ -8,6 +8,7 @@
 "use client";
 
 import { useState } from "react";
+import type { IngestResult } from "@/types";
 
 interface IngestModalProps {
   domainId: string;
@@ -32,7 +33,7 @@ export default function IngestModal({
   );
   const [preferences, setPreferences] = useState("");
   const [processing, setProcessing] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<IngestResult | null>(null);
   const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {

@@ -11,7 +11,7 @@ import IngestModal from "@/components/ui/IngestModal";
 import StreakBadge from "@/components/ui/StreakBadge";
 import ProgressStats from "@/components/ui/ProgressStats";
 import { sumModuleHours } from "@/lib/hours";
-import type { Domain, DomainStreak } from "@/types";
+import type { Domain, DomainStreak, GoalWithDetails, DomainStreakWithDomain } from "@/types";
 
 interface DomainDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -20,7 +20,7 @@ interface DomainDetailPageProps {
 export default function DomainDetailPage({ params }: DomainDetailPageProps) {
   const { slug } = use(params);
   const [domain, setDomain] = useState<Domain | null>(null);
-  const [goals, setGoals] = useState<any[]>([]);
+  const [goals, setGoals] = useState<GoalWithDetails[]>([]);
   const [streak, setStreak] = useState<DomainStreak | null>(null);
   const [activeTab, setActiveTab] = useState<"active" | "completed">("active");
   const [showGoalForm, setShowGoalForm] = useState(false);
@@ -64,7 +64,7 @@ export default function DomainDetailPage({ params }: DomainDetailPageProps) {
       if (streakRes.ok) {
         const streakData = await streakRes.json();
         const domainStreak = streakData.domains.find(
-          (d: any) => d.domain?.slug === slug
+          (d: DomainStreakWithDomain) => d.domain?.slug === slug
         );
         if (domainStreak) setStreak(domainStreak);
       }
@@ -108,14 +108,14 @@ export default function DomainDetailPage({ params }: DomainDetailPageProps) {
   const displayedGoals = activeTab === "active" ? activeGoals : completedGoals;
 
   // Aggregate stats across all active goals
-  const allActiveModules = activeGoals.flatMap((g: any) =>
-    (g.operations || []).flatMap((op: any) =>
-      (op.phases || []).flatMap((p: any) => p.modules || [])
+  const allActiveModules = activeGoals.flatMap((g) =>
+    (g.operations || []).flatMap((op) =>
+      (op.phases || []).flatMap((p) => p.modules || [])
     )
   );
   const totalModules = allActiveModules.length;
   const completedModules = allActiveModules.filter(
-    (m: any) => m.is_completed
+    (m) => m.is_completed
   ).length;
   const totalHours = sumModuleHours(allActiveModules);
 

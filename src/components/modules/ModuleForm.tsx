@@ -13,7 +13,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { Domain } from "@/types";
+import type { Domain, Goal, Operation, Phase } from "@/types";
 
 interface ModuleFormProps {
   date: string;
@@ -37,11 +37,11 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
 
   // Cascading selector state
   const [showLinking, setShowLinking] = useState(false);
-  const [goals, setGoals] = useState<any[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [selectedGoalId, setSelectedGoalId] = useState("");
-  const [operations, setOperations] = useState<any[]>([]);
+  const [operations, setOperations] = useState<Operation[]>([]);
   const [selectedOperationId, setSelectedOperationId] = useState("");
-  const [phases, setPhases] = useState<any[]>([]);
+  const [phases, setPhases] = useState<Phase[]>([]);
   const [selectedPhaseId, setSelectedPhaseId] = useState("");
 
   // Fetch goals when domain changes
@@ -245,7 +245,7 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
                 className={selectClass}
               >
                 <option value="">— None (standalone module) —</option>
-                {goals.map((g: any) => (
+                {goals.map((g) => (
                   <option key={g.id} value={g.id}>
                     {g.icon ? `${g.icon} ` : ""}{g.title}
                   </option>
@@ -265,7 +265,7 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
                   className={selectClass}
                 >
                   <option value="">— Select operation —</option>
-                  {operations.map((op: any) => (
+                  {operations.map((op) => (
                     <option key={op.id} value={op.id}>
                       {op.title}
                     </option>
@@ -286,7 +286,7 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
                   className={selectClass}
                 >
                   <option value="">— Select phase —</option>
-                  {phases.map((p: any) => (
+                  {phases.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.title} ({p.status})
                     </option>
@@ -300,11 +300,11 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
               <div className="text-xs font-mono text-zinc-500 bg-zinc-900/50 rounded px-3 py-2 border border-zinc-800">
                 <span className="text-zinc-600">Linking to: </span>
                 <span className="text-zinc-300">
-                  {goals.find((g: any) => g.id === selectedGoalId)?.title}
+                  {goals.find((g) => g.id === selectedGoalId)?.title}
                   {" → "}
-                  {operations.find((o: any) => o.id === selectedOperationId)?.title}
+                  {operations.find((o) => o.id === selectedOperationId)?.title}
                   {" → "}
-                  {phases.find((p: any) => p.id === selectedPhaseId)?.title}
+                  {phases.find((p) => p.id === selectedPhaseId)?.title}
                 </span>
               </div>
             )}

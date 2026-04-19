@@ -162,9 +162,10 @@ export async function POST(request: NextRequest) {
         modules: totalModules,
       },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to process document";
     return NextResponse.json(
-      { error: err.message || "Failed to process document" },
+      { error: message },
       { status: 500 }
     );
   }

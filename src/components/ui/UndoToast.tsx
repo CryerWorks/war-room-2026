@@ -116,12 +116,14 @@ function Toast({
 }) {
   const [remaining, setRemaining] = useState(TOAST_DURATION);
   const [restoring, setRestoring] = useState(false);
-  const startRef = useRef(Date.now());
+  const startRef = useRef<number | null>(null);
 
-  // Auto-dismiss countdown
+  // Auto-dismiss countdown — capture start time in effect to keep render pure
   useEffect(() => {
+    startRef.current = Date.now();
+
     const interval = setInterval(() => {
-      const elapsed = Date.now() - startRef.current;
+      const elapsed = Date.now() - (startRef.current || Date.now());
       const left = TOAST_DURATION - elapsed;
       if (left <= 0) {
         clearInterval(interval);

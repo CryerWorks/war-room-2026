@@ -13,6 +13,7 @@ import ScrambleText from "@/components/ui/ScrambleText";
 import PageReveal from "@/components/ui/PageReveal";
 import StreakBadge from "@/components/ui/StreakBadge";
 import NotificationManager from "@/components/ui/NotificationManager";
+import ExportMenu from "@/components/dashboard/ExportMenu";
 
 interface DashboardShellProps {
   streak: {
@@ -65,13 +66,16 @@ export default function DashboardShell({ streak, todayModules, children }: Dashb
             </div>
           )}
         </div>
-        {streak && titleDone && (
-          <div className="animate-[fadeSlideIn_0.3s_ease-out_both]">
-            <StreakBadge
-              current={streak.current_streak}
-              longest={streak.longest_streak}
-              label={`Best: ${streak.longest_streak} days`}
-            />
+        {titleDone && (
+          <div className="flex items-center gap-3 animate-[fadeSlideIn_0.3s_ease-out_both]">
+            <ExportMenu />
+            {streak && (
+              <StreakBadge
+                current={streak.current_streak}
+                longest={streak.longest_streak}
+                label={`Best: ${streak.longest_streak} days`}
+              />
+            )}
           </div>
         )}
       </div>

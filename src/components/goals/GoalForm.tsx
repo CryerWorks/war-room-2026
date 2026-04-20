@@ -71,10 +71,11 @@ export default function GoalForm({ domainId, onCreated, onCancel }: GoalFormProp
 
         {/* Title */}
         <div className="flex-1">
-          <label className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
+          <label htmlFor="goal-title" className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
             Goal Title
           </label>
           <input
+            id="goal-title"
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -87,10 +88,11 @@ export default function GoalForm({ domainId, onCreated, onCancel }: GoalFormProp
 
       {/* Description */}
       <div>
-        <label className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
+        <label htmlFor="goal-description" className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
           Description
         </label>
         <textarea
+          id="goal-description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="What does achieving this goal look like?"
@@ -101,10 +103,11 @@ export default function GoalForm({ domainId, onCreated, onCancel }: GoalFormProp
 
       {/* Target date */}
       <div>
-        <label className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
+        <label htmlFor="goal-target-date" className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
           Target Date (optional)
         </label>
         <input
+          id="goal-target-date"
           type="date"
           value={targetDate}
           onChange={(e) => setTargetDate(e.target.value)}
@@ -115,10 +118,11 @@ export default function GoalForm({ domainId, onCreated, onCancel }: GoalFormProp
       {/* Theatre selector (optional) */}
       {theatres.length > 0 && (
         <div>
-          <label className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
+          <label htmlFor="goal-theatre" className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
             Theatre (optional)
           </label>
           <select
+            id="goal-theatre"
             value={theatreId}
             onChange={(e) => setTheatreId(e.target.value)}
             className="w-full px-3 py-2 rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-100 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"

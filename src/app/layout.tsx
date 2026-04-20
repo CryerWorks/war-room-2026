@@ -35,6 +35,12 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col ambient-scanline">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-blue-600 focus:text-white focus:text-sm focus:font-medium"
+        >
+          Skip to main content
+        </a>
         <AuthProvider>
           <BootSequence>
             <UndoToastProvider>
@@ -57,7 +63,7 @@ export default function RootLayout({
               </div>
             </header>
 
-            <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-16 w-full">
+            <main id="main-content" className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-16 w-full">
               <PageTransition>
                 {children}
               </PageTransition>

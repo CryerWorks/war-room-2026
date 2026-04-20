@@ -6,7 +6,7 @@ export default function ExportMenu() {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Close on outside click
+  // Close on outside click or Escape key
   useEffect(() => {
     if (!open) return;
     function handleClick(e: MouseEvent) {
@@ -14,8 +14,15 @@ export default function ExportMenu() {
         setOpen(false);
       }
     }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
     document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, [open]);
 
   function download(path: string) {
@@ -27,8 +34,9 @@ export default function ExportMenu() {
     <div ref={menuRef} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="px-3 py-1.5 rounded-lg border border-zinc-700 text-zinc-400 text-xs font-mono hover:border-zinc-500 hover:text-zinc-300 transition-colors flex items-center gap-1.5"
-        title="Export data"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="px-3 py-1.5 rounded-lg border border-zinc-700 text-zinc-400 text-xs font-mono hover:border-zinc-500 hover:text-zinc-300 transition-colors flex items-center gap-1.5 focus:ring-2 focus:ring-blue-500 focus:outline-none"
       >
         <svg
           className="w-3.5 h-3.5"
@@ -36,6 +44,7 @@ export default function ExportMenu() {
           fill="none"
           stroke="currentColor"
           strokeWidth={2}
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"
@@ -47,18 +56,24 @@ export default function ExportMenu() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-52 rounded-lg border border-zinc-700 bg-zinc-900/95 backdrop-blur-sm shadow-lg z-50 overflow-hidden">
+        <div
+          className="absolute right-0 top-full mt-1 w-52 rounded-lg border border-zinc-700 bg-zinc-900/95 backdrop-blur-sm shadow-lg z-50 overflow-hidden"
+          role="menu"
+          aria-label="Export options"
+        >
           <button
+            role="menuitem"
             onClick={() => download("/api/export/modules-csv")}
-            className="w-full px-4 py-2.5 text-left text-xs font-mono text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 transition-colors flex items-center gap-2"
+            className="w-full px-4 py-2.5 text-left text-xs font-mono text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 transition-colors flex items-center gap-2 focus:bg-zinc-800 focus:text-zinc-100 focus:outline-none"
           >
             <span className="text-zinc-500">CSV</span>
             Modules
           </button>
-          <div className="border-t border-zinc-800" />
+          <div className="border-t border-zinc-800" role="separator" />
           <button
+            role="menuitem"
             onClick={() => download("/api/export/hierarchy-json")}
-            className="w-full px-4 py-2.5 text-left text-xs font-mono text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 transition-colors flex items-center gap-2"
+            className="w-full px-4 py-2.5 text-left text-xs font-mono text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 transition-colors flex items-center gap-2 focus:bg-zinc-800 focus:text-zinc-100 focus:outline-none"
           >
             <span className="text-zinc-500">JSON</span>
             Full Hierarchy

@@ -168,10 +168,11 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Title */}
       <div>
-        <label className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
+        <label htmlFor="module-title" className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
           Title
         </label>
         <input
+          id="module-title"
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -186,11 +187,12 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
         <label className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
           Domain
         </label>
-        <div className="flex gap-2">
+        <div className="flex gap-2" role="group" aria-label="Domain selector">
           {domains.map((domain) => (
             <button
               key={domain.id}
               type="button"
+              aria-pressed={domainId === domain.id}
               onClick={() => handleDomainChange(domain.id)}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors border ${
                 domainId === domain.id
@@ -226,6 +228,7 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
             viewBox="0 0 24 24"
             stroke="currentColor"
             strokeWidth={2}
+            aria-hidden="true"
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
@@ -236,10 +239,11 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
           <div className="mt-2 space-y-3 pl-4 border-l-2 border-zinc-800">
             {/* Goal selector */}
             <div>
-              <label className="block text-xs font-mono uppercase tracking-wider text-zinc-600 mb-1">
+              <label htmlFor="module-goal" className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
                 Goal
               </label>
               <select
+                id="module-goal"
                 value={selectedGoalId}
                 onChange={(e) => setSelectedGoalId(e.target.value)}
                 className={selectClass}
@@ -256,10 +260,11 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
             {/* Operation selector — only shows if a goal is selected */}
             {selectedGoalId && (
               <div>
-                <label className="block text-xs font-mono uppercase tracking-wider text-zinc-600 mb-1">
+                <label htmlFor="module-operation" className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
                   Operation
                 </label>
                 <select
+                  id="module-operation"
                   value={selectedOperationId}
                   onChange={(e) => setSelectedOperationId(e.target.value)}
                   className={selectClass}
@@ -277,10 +282,11 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
             {/* Phase selector — only shows if an operation is selected */}
             {selectedOperationId && (
               <div>
-                <label className="block text-xs font-mono uppercase tracking-wider text-zinc-600 mb-1">
+                <label htmlFor="module-phase" className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
                   Phase
                 </label>
                 <select
+                  id="module-phase"
                   value={selectedPhaseId}
                   onChange={(e) => setSelectedPhaseId(e.target.value)}
                   className={selectClass}
@@ -315,10 +321,11 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
       {/* Time range */}
       <div className="flex gap-4">
         <div className="flex-1">
-          <label className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
+          <label htmlFor="module-start-time" className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
             Start Time (optional)
           </label>
           <input
+            id="module-start-time"
             type="time"
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
@@ -326,10 +333,11 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
           />
         </div>
         <div className="flex-1">
-          <label className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
+          <label htmlFor="module-end-time" className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
             End Time (optional)
           </label>
           <input
+            id="module-end-time"
             type="time"
             value={endTime}
             onChange={(e) => setEndTime(e.target.value)}
@@ -340,10 +348,11 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
 
       {/* Description */}
       <div>
-        <label className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
+        <label htmlFor="module-description" className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
           Description (optional)
         </label>
         <textarea
+          id="module-description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="What is this module about?"
@@ -357,15 +366,17 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
         <label className="flex items-center gap-2.5 cursor-pointer group">
           <button
             type="button"
+            role="checkbox"
+            aria-checked={isRecurring}
             onClick={() => setIsRecurring(!isRecurring)}
-            className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
+            className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 focus:ring-2 focus:ring-blue-500 ${
               isRecurring
                 ? "bg-blue-500 border-blue-500 text-white"
                 : "border-zinc-600 group-hover:border-blue-400"
             }`}
           >
             {isRecurring && (
-              <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+              <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             )}
@@ -379,10 +390,10 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
             <div className="mt-3 space-y-3 pl-6 border-l-2 border-zinc-800">
               {/* Pattern */}
               <div>
-                <label className="block text-xs font-mono uppercase tracking-wider text-zinc-600 mb-1">
+                <label className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
                   Repeat Pattern
                 </label>
-                <div className="flex gap-2">
+                <div className="flex gap-2" role="group" aria-label="Repeat pattern">
                   {[
                     { value: "daily", label: "Daily" },
                     { value: "weekly", label: "Weekly" },
@@ -391,6 +402,7 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
                     <button
                       key={opt.value}
                       type="button"
+                      aria-pressed={pattern === opt.value}
                       onClick={() => setPattern(opt.value)}
                       className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
                         pattern === opt.value
@@ -407,22 +419,32 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
               {/* Day picker — only for specific_days */}
               {pattern === "specific_days" && (
                 <div>
-                  <label className="block text-xs font-mono uppercase tracking-wider text-zinc-600 mb-1">
+                  <label className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
                     Days of Week
                   </label>
-                  <div className="flex gap-1">
-                    {["S", "M", "T", "W", "T", "F", "S"].map((label, idx) => (
+                  <div className="flex gap-1" role="group" aria-label="Days of week">
+                    {[
+                      { label: "S", name: "Sunday" },
+                      { label: "M", name: "Monday" },
+                      { label: "T", name: "Tuesday" },
+                      { label: "W", name: "Wednesday" },
+                      { label: "T", name: "Thursday" },
+                      { label: "F", name: "Friday" },
+                      { label: "S", name: "Saturday" },
+                    ].map((day, idx) => (
                       <button
                         key={idx}
                         type="button"
+                        aria-label={day.name}
+                        aria-pressed={daysOfWeek.includes(idx)}
                         onClick={() => toggleDay(idx)}
-                        className={`w-8 h-8 rounded text-xs font-mono font-medium transition-colors border ${
+                        className={`w-8 h-8 rounded text-xs font-mono font-medium transition-colors border focus:ring-2 focus:ring-blue-500 ${
                           daysOfWeek.includes(idx)
                             ? "border-blue-500 bg-blue-500/20 text-blue-400"
-                            : "border-zinc-700 text-zinc-600 hover:bg-zinc-800"
+                            : "border-zinc-700 text-zinc-500 hover:bg-zinc-800"
                         }`}
                       >
-                        {label}
+                        {day.label}
                       </button>
                     ))}
                   </div>
@@ -431,10 +453,11 @@ export default function ModuleForm({ date, domains, onCreated }: ModuleFormProps
 
               {/* End date */}
               <div>
-                <label className="block text-xs font-mono uppercase tracking-wider text-zinc-600 mb-1">
+                <label htmlFor="module-end-date" className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
                   End Date (optional — leave empty for indefinite)
                 </label>
                 <input
+                  id="module-end-date"
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}

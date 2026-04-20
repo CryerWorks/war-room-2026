@@ -14,6 +14,7 @@ import PhaseForm from "@/components/phases/PhaseForm";
 import CompletionOverlay from "@/components/ui/CompletionOverlay";
 import TacticalIcon from "@/components/ui/TacticalIcon";
 import ModuleItem from "@/components/modules/ModuleItem";
+import { useUndoToast } from "@/components/ui/UndoToast";
 import { sumModuleHours, formatHours } from "@/lib/hours";
 import { formatDate, formatTime } from "@/lib/utils";
 import type { CompletionEvent, OperationWithFullDetails, PhaseWithFullModules, ModuleWithFullDetails } from "@/types";
@@ -24,6 +25,7 @@ interface OperationDetailPageProps {
 
 export default function OperationDetailPage({ params }: OperationDetailPageProps) {
   const { slug, operationId } = use(params);
+  const { showUndoToast } = useUndoToast();
   const [operation, setOperation] = useState<OperationWithFullDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [showPhaseForm, setShowPhaseForm] = useState(false);
@@ -297,13 +299,24 @@ export default function OperationDetailPage({ params }: OperationDetailPageProps
               allOperationModules={allModules}
               onToggleModule={toggleModule}
               onRefresh={fetchOperation}
-              onDeletePhase={(phaseId: string) => {
+              onShowUndoToast={showUndoToast}
+              onDeletePhase={(phaseId: string, phaseTitle: string) => {
                 // The PhaseDetail component handles its own exit animation
                 // via the exiting class. We just wait for it, then delete.
                 setTimeout(async () => {
-                  await fetch(`/api/phases/${phaseId}`, { method: "DELETE" });
-                  setExpandedPhaseTracked(null);
-                  fetchOperation();
+                  const res = await fetch(`/api/phases/${phaseId}`, { method: "DELETE" });
+                  if (res.ok) {
+                    const { deleted_at } = await res.json();
+                    setExpandedPhaseTracked(null);
+                    fetchOperation();
+                    showUndoToast({
+                      entityType: "phase",
+                      entityId: phaseId,
+                      entityTitle: phaseTitle,
+                      deletedAt: deleted_at,
+                      onUndo: () => fetchOperation(),
+                    });
+                  }
                 }, 300);
               }}
             />
@@ -625,6 +638,7 @@ function PhaseDetail({
   onToggleModule,
   onRefresh,
   onDeletePhase,
+  onShowUndoToast,
 }: {
   phase: PhaseWithFullModules | undefined;
   color: string;
@@ -633,7 +647,8 @@ function PhaseDetail({
   allOperationModules: ModuleWithFullDetails[];
   onToggleModule: (id: string, current: boolean) => void;
   onRefresh: () => void;
-  onDeletePhase: (phaseId: string) => void;
+  onDeletePhase: (phaseId: string, phaseTitle: string) => void;
+  onShowUndoToast: (item: { entityType: "module"; entityId: string; entityTitle: string; deletedAt: string; onUndo: () => void }) => void;
 }) {
   const [showAddModule, setShowAddModule] = useState(false);
   const [confirmDeletePhase, setConfirmDeletePhase] = useState(false);
@@ -710,7 +725,7 @@ function PhaseDetail({
                 <button
                   onClick={() => {
                     setExitingPhase(true);
-                    onDeletePhase(phase.id);
+                    onDeletePhase(phase.id, phase.title);
                   }}
                   className="text-xs text-red-400 font-medium hover:text-red-300"
                 >
@@ -761,8 +776,19 @@ function PhaseDetail({
               breadcrumb={`${operationTitle} → ${phase.title} → M${String(index + 1).padStart(2, "0")}`}
               onToggle={onToggleModule}
               onDelete={async (id: string) => {
-                await fetch(`/api/modules/${id}`, { method: "DELETE" });
-                onRefresh();
+                const mod = modules.find((m) => m.id === id);
+                const res = await fetch(`/api/modules/${id}`, { method: "DELETE" });
+                if (res.ok) {
+                  const { deleted_at } = await res.json();
+                  onRefresh();
+                  onShowUndoToast({
+                    entityType: "module",
+                    entityId: id,
+                    entityTitle: mod?.title || "Module",
+                    deletedAt: deleted_at,
+                    onUndo: () => onRefresh(),
+                  });
+                }
               }}
               onSaved={onRefresh}
             >

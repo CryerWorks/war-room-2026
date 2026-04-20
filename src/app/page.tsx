@@ -37,17 +37,18 @@ async function getDashboardData() {
   ] = await Promise.all([
     supabase.from("domains").select("*").order("name"),
     // Lean query for aggregate stats (all modules, minimal fields)
-    supabase.from("modules").select("domain_id, is_completed, scheduled_date, start_time, end_time"),
+    supabase.from("modules").select("domain_id, is_completed, scheduled_date, start_time, end_time").is("deleted_at", null),
     // Rich query for today's modules only (full detail for the focus view)
     supabase
       .from("modules")
       .select("*, domain:domains(*), operation:operations(title, goal:goals(title, icon)), phase:phases(title)")
       .eq("scheduled_date", today)
+      .is("deleted_at", null)
       .order("start_time", { nullsFirst: false }),
     supabase.from("user_stats").select("*").single(),
     supabase.from("domain_streaks").select("*, domain:domains(name, slug, color)"),
-    supabase.from("goals").select("*, domain:domains(name, slug, color)").eq("status", "completed"),
-    supabase.from("operations").select("*, goal:goals(title, icon, theatre_id, theatre:theatres(id, name, icon, color)), domain:domains(slug, color), phases(id, title, status, sort_order, modules:modules(id, title, is_completed))").eq("status", "active"),
+    supabase.from("goals").select("*, domain:domains(name, slug, color)").eq("status", "completed").is("deleted_at", null),
+    supabase.from("operations").select("*, goal:goals(title, icon, theatre_id, theatre:theatres(id, name, icon, color)), domain:domains(slug, color), phases(id, title, status, sort_order, deleted_at, modules:modules(id, title, is_completed, deleted_at))").eq("status", "active").is("deleted_at", null),
   ]);
 
   return {
@@ -57,7 +58,16 @@ async function getDashboardData() {
     globalStreak: globalStreakResult.data,
     domainStreaks: domainStreaksResult.data || [],
     completedGoals: goalsResult.data || [],
-    activeOperations: operationsResult.data || [],
+    // Filter soft-deleted children from nested operation joins
+    activeOperations: (operationsResult.data || []).map((op) => ({
+      ...op,
+      phases: (op.phases || [])
+        .filter((p: { deleted_at?: string | null }) => !p.deleted_at)
+        .map((p: { modules?: Array<{ deleted_at?: string | null }> }) => ({
+          ...p,
+          modules: (p.modules || []).filter((m) => !m.deleted_at),
+        })),
+    })),
   };
 }
 

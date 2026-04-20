@@ -55,7 +55,7 @@ export async function PATCH(
   return NextResponse.json({ ...data, completions });
 }
 
-// DELETE /api/modules/:id — delete a module
+// DELETE /api/modules/:id — soft delete a module
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -64,12 +64,17 @@ export async function DELETE(
   if (authError) return unauthorized();
 
   const { id } = await params;
+  const deleted_at = new Date().toISOString();
 
-  const { error } = await supabase.from("modules").delete().eq("id", id);
+  const { error } = await supabase
+    .from("modules")
+    .update({ deleted_at })
+    .eq("id", id)
+    .is("deleted_at", null);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ deleted: true });
+  return NextResponse.json({ deleted: true, deleted_at });
 }

@@ -21,15 +21,24 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await supabase
     .from("phases")
-    .select("*, modules:modules(id, is_completed, start_time, end_time, title, scheduled_date)")
+    .select("*, modules:modules(id, is_completed, start_time, end_time, title, scheduled_date, deleted_at)")
     .eq("operation_id", operationId)
+    .is("deleted_at", null)
     .order("sort_order");
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json(data);
+  // Filter out soft-deleted modules from nested joins
+  const filtered = (data || []).map((phase) => ({
+    ...phase,
+    modules: (phase.modules || []).filter(
+      (m: { deleted_at?: string | null }) => !m.deleted_at
+    ),
+  }));
+
+  return NextResponse.json(filtered);
 }
 
 // POST /api/phases — create a new phase within an operation

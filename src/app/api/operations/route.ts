@@ -16,7 +16,8 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from("operations")
-    .select("*, goal:goals(*), phases(*, modules:modules(id, is_completed, start_time, end_time))")
+    .select("*, goal:goals(*), phases(*, modules:modules(id, is_completed, start_time, end_time, deleted_at))")
+    .is("deleted_at", null)
     .order("sort_order")
     .order("created_at");
 
@@ -38,7 +39,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json(data);
+  // Filter out soft-deleted children from nested joins
+  const filtered = (data || []).map((op) => ({
+    ...op,
+    phases: (op.phases || [])
+      .filter((p: { deleted_at?: string | null }) => !p.deleted_at)
+      .map((p: { modules?: Array<{ deleted_at?: string | null }> }) => ({
+        ...p,
+        modules: (p.modules || []).filter((m) => !m.deleted_at),
+      })),
+  }));
+
+  return NextResponse.json(filtered);
 }
 
 // POST /api/operations — create a new operation under a goal

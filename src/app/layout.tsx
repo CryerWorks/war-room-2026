@@ -5,6 +5,7 @@ import StatusBar from "@/components/ui/StatusBar";
 import BootSequence from "@/components/ui/BootSequence";
 import PageTransition from "@/components/ui/PageTransition";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { UndoToastProvider } from "@/components/ui/UndoToast";
 import LogoutButton from "@/components/auth/LogoutButton";
 import "./globals.css";
 
@@ -36,6 +37,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col ambient-scanline">
         <AuthProvider>
           <BootSequence>
+            <UndoToastProvider>
             <header className="sticky top-0 z-50 border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-md">
               <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-14">
@@ -62,6 +64,7 @@ export default function RootLayout({
             </main>
 
             <StatusBar />
+            </UndoToastProvider>
           </BootSequence>
         </AuthProvider>
       </body>

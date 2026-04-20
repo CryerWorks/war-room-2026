@@ -44,6 +44,7 @@ export interface Goal {
   status: GoalStatus;
   target_date: string | null;
   completed_at: string | null;
+  deleted_at: string | null;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -62,6 +63,7 @@ export interface Operation {
   description: string;
   status: OperationStatus;
   completed_at: string | null;
+  deleted_at: string | null;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -80,6 +82,7 @@ export interface Phase {
   sort_order: number;
   status: PhaseStatus;
   completed_at: string | null;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -100,6 +103,7 @@ export interface Module {
   end_time: string | null;
   is_completed: boolean;
   completed_at: string | null;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 }

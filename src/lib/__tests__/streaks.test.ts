@@ -46,6 +46,13 @@ function createMockSupabase(tableData: Record<string, any[]> = {}) {
         filteredData = filteredData.filter((row) => vals.includes(row[col]));
         return builder;
       },
+      is: (col: string, val: any) => {
+        filteredData = filteredData.filter((row) => {
+          const v = row[col];
+          return val === null ? v === null || v === undefined : v === val;
+        });
+        return builder;
+      },
       order: () => builder,
       limit: () => builder,
       single: () => ({

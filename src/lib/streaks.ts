@@ -97,11 +97,12 @@ export async function checkPhaseCompletion(
 
   if (!phase || phase.status === "completed") return null;
 
-  // Get all modules in this phase
+  // Get all non-deleted modules in this phase
   const { data: modules } = await supabase
     .from("modules")
     .select("is_completed, start_time, end_time")
-    .eq("phase_id", phaseId);
+    .eq("phase_id", phaseId)
+    .is("deleted_at", null);
 
   if (!modules || modules.length === 0) return null;
   if (!modules.every((m) => m.is_completed)) return null;
@@ -152,7 +153,8 @@ export async function checkOperationCompletion(
   const { data: phases } = await supabase
     .from("phases")
     .select("status")
-    .eq("operation_id", operationId);
+    .eq("operation_id", operationId)
+    .is("deleted_at", null);
 
   if (!phases || phases.length === 0) return null;
   if (!phases.every((p) => p.status === "completed")) return null;
@@ -167,11 +169,12 @@ export async function checkOperationCompletion(
     })
     .eq("id", operationId);
 
-  // Sum hours across all modules in this operation
+  // Sum hours across all non-deleted modules in this operation
   const { data: modules } = await supabase
     .from("modules")
     .select("is_completed, start_time, end_time")
-    .eq("operation_id", operationId);
+    .eq("operation_id", operationId)
+    .is("deleted_at", null);
 
   const goal = operation.goal;
   const domain = goal?.domain;
@@ -208,7 +211,8 @@ export async function checkGoalCompletion(
   const { data: operations } = await supabase
     .from("operations")
     .select("id, status")
-    .eq("goal_id", goalId);
+    .eq("goal_id", goalId)
+    .is("deleted_at", null);
 
   if (!operations || operations.length === 0) return null;
   if (!operations.every((o) => o.status === "completed")) return null;
@@ -232,7 +236,8 @@ export async function checkGoalCompletion(
     const { data: modules } = await supabase
       .from("modules")
       .select("is_completed, start_time, end_time")
-      .in("operation_id", opIds);
+      .in("operation_id", opIds)
+      .is("deleted_at", null);
 
     totalHours = sumModuleHours(modules || []);
     totalModules = modules?.filter((m) => m.is_completed).length || 0;
@@ -291,12 +296,13 @@ export async function runCompletionCascade(
     .single();
 
   if (currentPhase && currentPhase.status === "pending" && currentPhase.operation_id) {
-    // Check all prior phases are completed
+    // Check all prior non-deleted phases are completed
     const { data: priorPhases } = await supabase
       .from("phases")
       .select("status")
       .eq("operation_id", currentPhase.operation_id)
-      .lt("sort_order", currentPhase.sort_order);
+      .lt("sort_order", currentPhase.sort_order)
+      .is("deleted_at", null);
 
     const allPriorCompleted = !priorPhases || priorPhases.length === 0 ||
       priorPhases.every((p) => p.status === "completed");
@@ -327,6 +333,7 @@ export async function runCompletionCascade(
       .select("id")
       .eq("operation_id", currentPhase.operation_id)
       .eq("status", "pending")
+      .is("deleted_at", null)
       .order("sort_order", { ascending: true })
       .limit(1)
       .single();

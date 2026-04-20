@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
   let query = supabase
     .from("modules")
     .select("*, domain:domains(*), notes:module_notes(*), operation:operations(title, goal:goals(title, icon)), phase:phases(title), tags:module_tags!module_id(id, tag_id, tag:tags(*))")
+    .is("deleted_at", null)
     .order("scheduled_date")
     .order("start_time", { nullsFirst: false });
 

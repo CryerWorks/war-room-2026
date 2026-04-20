@@ -6,6 +6,7 @@ import ModuleForm from "@/components/modules/ModuleForm";
 import ModuleNotes from "@/components/modules/ModuleNotes";
 import ModuleItem from "@/components/modules/ModuleItem";
 import CompletionOverlay from "@/components/ui/CompletionOverlay";
+import { useUndoToast } from "@/components/ui/UndoToast";
 import type { ModuleWithDetails, Domain, CompletionEvent } from "@/types";
 
 // Extended module type — includes joined operation/phase data from the API
@@ -21,6 +22,7 @@ interface DayDetailProps {
 }
 
 export default function DayDetail({ date, domains, onModuleChanged }: DayDetailProps) {
+  const { showUndoToast } = useUndoToast();
   const [modules, setModules] = useState<ModuleWithHierarchy[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [expandedNotes, setExpandedNotes] = useState<string | null>(null);
@@ -80,10 +82,22 @@ export default function DayDetail({ date, domains, onModuleChanged }: DayDetailP
   }
 
   async function deleteModule(moduleId: string) {
+    const mod = modules.find((m) => m.id === moduleId);
     const res = await fetch(`/api/modules/${moduleId}`, { method: "DELETE" });
     if (res.ok) {
+      const { deleted_at } = await res.json();
       fetchModules();
       onModuleChanged();
+      showUndoToast({
+        entityType: "module",
+        entityId: moduleId,
+        entityTitle: mod?.title || "Module",
+        deletedAt: deleted_at,
+        onUndo: () => {
+          fetchModules();
+          onModuleChanged();
+        },
+      });
     }
   }
 

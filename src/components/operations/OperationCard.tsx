@@ -9,6 +9,7 @@ import Link from "next/link";
 import StatusBadge from "@/components/ui/StatusBadge";
 import StepperTimeline from "@/components/ui/StepperTimeline";
 import ProgressStats from "@/components/ui/ProgressStats";
+import { useUndoToast } from "@/components/ui/UndoToast";
 import { sumModuleHours } from "@/lib/hours";
 
 interface OperationCardProps {
@@ -37,6 +38,7 @@ interface OperationCardProps {
 }
 
 export default function OperationCard({ operation, color, domainSlug, onUpdated }: OperationCardProps) {
+  const { showUndoToast } = useUndoToast();
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [exiting, setExiting] = useState(false);
@@ -89,7 +91,17 @@ export default function OperationCard({ operation, color, domainSlug, onUpdated 
     setExiting(true);
     setTimeout(async () => {
       const res = await fetch(`/api/operations/${operation.id}`, { method: "DELETE" });
-      if (res.ok) onUpdated?.();
+      if (res.ok) {
+        const { deleted_at } = await res.json();
+        onUpdated?.();
+        showUndoToast({
+          entityType: "operation",
+          entityId: operation.id,
+          entityTitle: operation.title,
+          deletedAt: deleted_at,
+          onUndo: () => onUpdated?.(),
+        });
+      }
     }, 300);
   }
 

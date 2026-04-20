@@ -19,10 +19,10 @@ async function getDomainsData() {
   const [domainsResult, modulesResult, streaksResult, goalsResult, opsResult] =
     await Promise.all([
       supabase.from("domains").select("*").order("name"),
-      supabase.from("modules").select("domain_id, is_completed, start_time, end_time"),
+      supabase.from("modules").select("domain_id, is_completed, start_time, end_time").is("deleted_at", null),
       supabase.from("domain_streaks").select("*"),
-      supabase.from("goals").select("id, domain_id, status"),
-      supabase.from("operations").select("id, domain_id, status"),
+      supabase.from("goals").select("id, domain_id, status").is("deleted_at", null),
+      supabase.from("operations").select("id, domain_id, status").is("deleted_at", null),
     ]);
 
   return {

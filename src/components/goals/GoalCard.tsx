@@ -13,6 +13,7 @@ import TacticalIcon from "@/components/ui/TacticalIcon";
 import IconPicker from "@/components/ui/IconPicker";
 import OperationCard from "@/components/operations/OperationCard";
 import OperationForm from "@/components/operations/OperationForm";
+import { useUndoToast } from "@/components/ui/UndoToast";
 import { sumModuleHours } from "@/lib/hours";
 import type { Goal, Theatre } from "@/types";
 
@@ -52,6 +53,7 @@ interface GoalCardProps {
 }
 
 export default function GoalCard({ domainSlug, goal, color, onUpdated }: GoalCardProps) {
+  const { showUndoToast } = useUndoToast();
   const [expanded, setExpanded] = useState(false);
   const [showOpForm, setShowOpForm] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -120,7 +122,17 @@ export default function GoalCard({ domainSlug, goal, color, onUpdated }: GoalCar
     setExiting(true);
     setTimeout(async () => {
       const res = await fetch(`/api/goals/${goal.id}`, { method: "DELETE" });
-      if (res.ok) onUpdated();
+      if (res.ok) {
+        const { deleted_at } = await res.json();
+        onUpdated();
+        showUndoToast({
+          entityType: "goal",
+          entityId: goal.id,
+          entityTitle: goal.title,
+          deletedAt: deleted_at,
+          onUndo: () => onUpdated(),
+        });
+      }
     }, 300);
   }
 

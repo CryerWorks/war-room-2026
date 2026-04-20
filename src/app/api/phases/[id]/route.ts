@@ -38,7 +38,7 @@ export async function PATCH(
   return NextResponse.json(data);
 }
 
-// DELETE /api/phases/:id
+// DELETE /api/phases/:id — soft delete phase + cascade to modules
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -47,12 +47,25 @@ export async function DELETE(
   if (authError) return unauthorized();
 
   const { id } = await params;
+  const deleted_at = new Date().toISOString();
 
-  const { error } = await supabase.from("phases").delete().eq("id", id);
+  // Soft delete the phase itself
+  const { error } = await supabase
+    .from("phases")
+    .update({ deleted_at })
+    .eq("id", id)
+    .is("deleted_at", null);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ deleted: true });
+  // Cascade: soft delete non-deleted modules under this phase
+  await supabase
+    .from("modules")
+    .update({ deleted_at })
+    .eq("phase_id", id)
+    .is("deleted_at", null);
+
+  return NextResponse.json({ deleted: true, deleted_at });
 }

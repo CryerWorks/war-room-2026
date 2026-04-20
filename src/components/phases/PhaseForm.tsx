@@ -49,10 +49,11 @@ export default function PhaseForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <div>
-        <label className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
+        <label htmlFor="phase-title" className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
           Phase Title
         </label>
         <input
+          id="phase-title"
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -63,10 +64,11 @@ export default function PhaseForm({
       </div>
 
       <div>
-        <label className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
+        <label htmlFor="phase-description" className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
           Description (optional)
         </label>
         <input
+          id="phase-description"
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}

@@ -73,7 +73,8 @@ export default function CalendarGrid({ onSelectDate, selectedDate }: CalendarGri
       <div className="flex items-center justify-between mb-4 sm:mb-6">
         <button
           onClick={prevMonth}
-          className="p-1.5 sm:p-2 rounded-lg hover:bg-zinc-800 transition-colors text-zinc-400 text-sm"
+          aria-label="Previous month"
+          className="p-1.5 sm:p-2 rounded-lg hover:bg-zinc-800 transition-colors text-zinc-400 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
         >
           &larr; <span className="hidden sm:inline">Prev</span>
         </button>
@@ -82,7 +83,8 @@ export default function CalendarGrid({ onSelectDate, selectedDate }: CalendarGri
         </h3>
         <button
           onClick={nextMonth}
-          className="p-1.5 sm:p-2 rounded-lg hover:bg-zinc-800 transition-colors text-zinc-400 text-sm"
+          aria-label="Next month"
+          className="p-1.5 sm:p-2 rounded-lg hover:bg-zinc-800 transition-colors text-zinc-400 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
         >
           <span className="hidden sm:inline">Next</span> &rarr;
         </button>
@@ -113,6 +115,8 @@ export default function CalendarGrid({ onSelectDate, selectedDate }: CalendarGri
             <button
               key={i}
               onClick={() => onSelectDate(dateStr)}
+              aria-label={`${date.toLocaleDateString("en-US", { month: "long", day: "numeric" })}${counts.total > 0 ? `, ${counts.total} modules` : ""}`}
+              aria-current={isToday ? "date" : undefined}
               className={`
                 relative min-h-[52px] sm:min-h-[80px] p-1 sm:p-2 text-left border-r border-b border-zinc-800
                 transition-colors
@@ -134,7 +138,7 @@ export default function CalendarGrid({ onSelectDate, selectedDate }: CalendarGri
                     ? "bg-blue-500 text-white w-5 h-5 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-xs sm:text-sm"
                     : isCurrentMonth
                       ? "text-zinc-100"
-                      : "text-zinc-600"
+                      : "text-zinc-500"
                   }
                 `}
               >

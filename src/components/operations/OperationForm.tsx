@@ -49,10 +49,11 @@ export default function OperationForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
+        <label htmlFor="operation-title" className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
           Operation Title
         </label>
         <input
+          id="operation-title"
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -63,10 +64,11 @@ export default function OperationForm({
       </div>
 
       <div>
-        <label className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
+        <label htmlFor="operation-description" className="block text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
           Description
         </label>
         <textarea
+          id="operation-description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="What does this operation involve?"

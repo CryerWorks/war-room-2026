@@ -172,6 +172,7 @@ export default function GoalCard({ domainSlug, goal, color, onUpdated }: GoalCar
       {/* Clickable header */}
       <button
         onClick={() => setExpanded(!expanded)}
+        aria-expanded={expanded}
         className="w-full px-5 py-4 text-left hover:bg-zinc-800/30 transition-colors"
       >
         <div className="flex items-start justify-between">
@@ -193,6 +194,7 @@ export default function GoalCard({ domainSlug, goal, color, onUpdated }: GoalCar
             viewBox="0 0 24 24"
             stroke="currentColor"
             strokeWidth={2}
+            aria-hidden="true"
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
           </svg>

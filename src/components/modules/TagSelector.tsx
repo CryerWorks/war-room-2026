@@ -95,6 +95,7 @@ export default function TagSelector({ moduleId, assignedTags, onChanged }: TagSe
             {at.tag.name}
             <button
               onClick={() => removeTag(at.id)}
+              aria-label={`Remove tag ${at.tag.name}`}
               className="hover:opacity-70 transition-opacity"
             >
               ×
